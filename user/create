@@ -32,7 +32,7 @@ function run() {
   cli="create new user"
 
   cd /etc/origin/master
-  htpasswd -b /etc/origin/master/htpasswd ${user} ${password}
+  htpasswd -b /etc/origin/master/htpasswd ${name} ${password}
 
   if [ "${project}" != "" ] && [ "${role}" != "" ]; 
   then
