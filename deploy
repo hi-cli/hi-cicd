@@ -1,0 +1,88 @@
+#!/bin/bash
+###############################################################################
+# Project: hi-cli
+# Description: The cross platform development toolkit - hi-cli
+# Author: John Deng (john.deng@outlook.com)
+#
+# Copyright (c) 2014-2017 John Deng (john.deng@outlook.com)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Author: John Deng (john.deng@outlook.com)
+# Updated: Mon Mar 27 23:24:29 CST 2017
+# Module: oc
+# Submodule: 
+# Command: deploy
+###############################################################################
+
+source "${HI_CLI_HOME}/bin/colors"
+source "${HI_CLI_HOME}/bin/clap"
+source "${HI_CLI_HOME}/bin/logging"
+###############################################################################
+function deploy() {
+  # deploy(project, app, ver, "dev", "Asia/Shanghai")
+  ver=$(get_version)
+  project_domain="${project}-${domain}"
+  imageTag="latest"
+  log_debug "deploy: ${project}/${app}, ${ver}, ${project_domain}, ${timezone} ${port}"
+  
+  if [ "dev" == "${domain}" ]; then
+      rm -rf oc-build && mkdir -p oc-build
+      cp target/${app}-${ver}.jar oc-build/app.jar
+      oc project ${project_domain}
+      # create build. override the exit code since it complains about exising imagestream
+      if [ $(is_exist "bc") == "no" ]; then
+        oc new-build --name=${app} --image-stream=s2i-java --binary=true --labels=app=${app} -n ${project_domain} || true
+      fi
+      # build image
+      oc start-build ${app} --from-dir=oc-build --wait=true -n ${project_domain}
+  else
+      # tag for stage or prod
+      imageTag="${ver}"
+      oc tag ${project}-dev/${app}:latest ${project_domain}/${app}:${imageTag}
+      oc project ${project_domain}
+  fi
+
+  # deploy image
+  if [ $(is_exist "dc") == "no" ]; then
+      oc new-app ${app}:${imageTag} --env TZ=${timezone} -n ${project_domain}
+  fi
+  if [ $(is_exist "route") == "no" ]; then
+      oc expose svc/${app} --port=${port} -n ${project_domain}
+  fi
+}
+
+function get_version() {
+  echo $(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version|grep -Ev '(^\[|Download\w+:)')
+}
+
+function is_exist() {
+  if [ $(oc get $1 -n ${project_domain} | grep ${app} | wc -l) == 0 ]; then
+    echo "no"
+  else
+    echo "yes"
+  fi
+}
+
+function run() {
+  cli=""
+
+  deploy
+
+  result=$?
+
+  eval $1="\${result}"
+  eval $2="\${cli}"
+}
+
+###############################################################################
