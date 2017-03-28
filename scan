@@ -19,11 +19,27 @@
 # limitations under the License.
 #
 # Author: John Deng (john.deng@outlook.com)
-# Updated: Sat Mar 18 15:27:16 CST 2017
+# Updated: Sat Mar 18 15:33:39 CST 2017
 # module: oc
-# Action: 
+# Action: login
 ###############################################################################
 
-openshift_master=https://${arg3}:8443
-sonarqube_url=http://sonarqube:9000
+source "${HI_CLI_HOME}/bin/colors"
+source "${HI_CLI_HOME}/bin/clap"
+source "${HI_CLI_HOME}/bin/logging"
+###############################################################################
+function run() {
+
+  cli="mvn jacoco:report sonar:sonar -Dsonar.host.url=${sonarqube_url} -Dmaven.test.skip=true"
+ 
+  ${cli}
+
+  result=$?
+
+  eval $1=\${result}
+  eval $2=\${cli}
+}
+
+###############################################################################
+
 
