@@ -25,13 +25,14 @@
 ###############################################################################
 
 source "${HI_CLI_HOME}/bin/colors"
-source "${HI_CLI_HOME}/bin/clap"
+#source "${HI_CLI_HOME}/bin/clap"
 source "${HI_CLI_HOME}/bin/logging"
 ###############################################################################
 function run() {
-  cli="oc login"
-
-  oc login ${OPENSHIFT_MASTER}
+  cli="oc login ${openshift_master}"
+  log_debug "${openshift_master}"
+  
+  ${cli}
 
   result=$?
 

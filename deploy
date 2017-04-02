@@ -26,7 +26,7 @@
 ###############################################################################
 
 source "${HI_CLI_HOME}/bin/colors"
-source "${HI_CLI_HOME}/bin/clap"
+#source "${HI_CLI_HOME}/bin/clap"
 source "${HI_CLI_HOME}/bin/logging"
 ###############################################################################
 function deploy() {
