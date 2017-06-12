@@ -3,7 +3,7 @@ hi-cicd is a hi-cli module for continuous integration and delivery based on Open
 
 # Installation guide
 
-* Install [hi-cli](https://github.com/hi-cli/hi-cli)
+* Install [hi-cli](https://github.com/hi-cli/hi-cli), please add sudo at the beginning of below installation commands if you are not root.
 ```
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/hi-cli/hi-cli/master/bin/install)"
 ```
@@ -16,6 +16,12 @@ hi package install cicd
 
 Please make sure you are install openshift client: [oc](https://github.com/openshift/origin/releases)
 
+If you are using zsh, you can install [oc command completion](https://github.com/chmouel/oh-my-zsh-openshift)
+
+* login openshift
+```bash
+oc login
+```
 
 * Switch to your project
 ```bash
