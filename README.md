@@ -23,14 +23,20 @@ If you are using zsh, you can install [oc command completion](https://github.com
 oc login
 ```
 
-* Switch to your project
+* make a directory that host your app
 ```bash
-oc project your-project
+mkdir my-project
+cd my-project
 ```
 
-* switch to your working directory
+* Clone the source code
+```
+git clone git@github.com:my-project/my-app.git
+```
+
+* switch to your working directory, make sure your working directory is my-project/my-app/ (type pwd to check)
 ```bash
-cd your-app
+cd my-app
 ```
 
 * Init hi-cli
@@ -38,12 +44,12 @@ cd your-app
 hi init
 ``` 
 
-* Deploy java / nodejs new app to your-project-dev
+* Deploy java / nodejs new app to my-project-dev
 ```
 hi cicd deploy new
 ```
 
-* Deploy java / nodejs app to your-project-stage using your-project/your-app:dev image stream
+* Deploy java / nodejs app to my-project-stage using my-project/my-app:dev image stream
 ```
 hi cicd deploy profile=stage
 ```

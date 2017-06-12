@@ -79,46 +79,26 @@ function deploy() {
     log_error "No app target found!"
     exit
   fi  
-  log_debug "deploy: ${project}/${app}, ${ver}, ${project_profile}, ${timezone} ${port}"
+  log_debug "update trigger: ${project}/${app}, ${ver}, ${project_profile}, ${timezone} ${port}"
+  # tag for stage or prod
+  
+  image_tag="${ver}"
+  log_debug "image_tag: ${image_tag}, ver: ${ver}"
+  oc project ${project_profile}
 
-  if [ "" != "${new}" ]; then
-    
-    # check deploy target type is war or jar
-    oc project ${project_profile}
-    # create build. override the exit code since it complains about exising imagestream
-    if [ $(is_exist "bc") == "no" ]; then
-      log_debug "create new image stream"
-      oc new-build --name=${app} --image-stream=${image_stream} --binary=true --labels=app=${app} -n ${project_profile} || true
-    fi
-    # build image
-    log_debug "start build"
-    oc start-build ${app} --from-dir="${from_dir}" --wait=true -n ${project_profile}
-  else
-    # tag for stage or prod
-    log_debug "tag image stream"
-    image_tag="${ver}"
-    log_debug "image_tag: ${image_tag}, ver: ${ver}"
+  # get last image tag 
+  last_image_tag=${project_profile}/$(oc set triggers dc/${app} | grep image | awk '{print $3}')
+  # remove it
+  oc set triggers dc/${app} --from-image=${last_image_tag} -c ${app} --remove -n ${project_profile}
+  # update with new image tag
+  oc set triggers dc/${app} --from-image=${project_profile}/${app}:latest -c ${app} -n ${project_profile}
 
-    # tag new image stream
-    oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:${image_tag}
-    oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:latest
-    # switch to new
-    oc project ${project_profile}
-  fi
+  # show trigers
+  oc set triggers dc/${app}
 
   if [ $? != 0 ]; then
-    log_error "failed to create image stream"
+    log_error "failed to update trigger"
     return $?
-  fi
-
-  # deploy image
-  if [ $(is_exist "dc") == "no" ]; then
-    log_debug "create new app"
-    oc new-app ${app}:latest --env SPRING_PROFILES_ACTIVE=${profile} --env TZ=${timezone} -n ${project_profile}
-  fi
-  if [ $(is_exist "route") == "no" ]; then
-    log_debug "create router"    
-    oc expose svc/${app} --port=${port} -n ${project_profile}
   fi
 }
 
