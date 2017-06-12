@@ -44,32 +44,37 @@ function deploy() {
     images_profile=dev
   fi
 
-  log_debug "deploy: ${project}/${app}, ${ver}, ${project_profile}, ${timezone} ${port}"
-  
   if [ "" != "${new}" ]; then
     from_dir="oc-build"
     rm -rf oc-build && mkdir -p oc-build
     # check deploy target type is war or jar
     log_debug "check app type"
-    if [ -f target/${app}.war ]; then
-      ver=$(get_java_app_version)
-      mkdir -p oc-build/deployments
-      cp target/${app}.war oc-build/deployments/ROOT.war
-    elif [ -f target/${app}-${ver}.jar ]; then
-      ver=$(get_java_app_version)
-      cp target/${app}-${ver}.jar oc-build/app.jar
-    elif [ -f ./package.json ]; then
+    if [ -f ./package.json ]; then
+      log_debug "found nodejs app"
       ver=$(get_nodejs_app_version)
       from_dir="dist"
       if [ "${build}" == "build" ]; then
         [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
       fi
-      pwd
       create_package_json "dist/package.json"
+    elif [ -f pom.xml ]; then
+      log_debug "found java app"
+      ver=$(get_java_app_version)
+      if [ -f target/${app}.war ]; then
+        mkdir -p oc-build/deployments
+        cp target/${app}.war oc-build/deployments/ROOT.war
+      elif [ -f target/${app}-${ver}.jar ]; then
+        ver=$(get_java_app_version)
+        cp target/${app}-${ver}.jar oc-build/app.jar
+      else
+        log_error "No app target found!"
+        exit
+      fi
     else
-      log_error "No java app target found!"
+      log_error "No app target found!"
       exit
-    fi
+    fi  
+    log_debug "deploy: ${project}/${app}, ${ver}, ${project_profile}, ${timezone} ${port}"
     oc project ${project_profile}
     # create build. override the exit code since it complains about exising imagestream
     if [ $(is_exist "bc") == "no" ]; then
