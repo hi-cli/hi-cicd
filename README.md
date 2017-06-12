@@ -40,17 +40,34 @@ hi init
 
 * Deploy java / nodejs new app to your-project-dev
 ```
-hi cicd deploy new profile=dev
+hi cicd deploy new
 ```
 
-* Update java / nodejs app to your-project-dev
+* Deploy java / nodejs app to your-project-stage using your-project/your-app:dev image stream
 ```
-hi cicd deploy profile=dev
+hi cicd deploy profile=stage
 ```
 
-    hi: hi-cli
-    cicd: hi-cicd 
-    deploy: deploy command
-    new: deploy as new application, if you d
-    profile: dev, test, stage, prod
+* hi cicd deploy command options
+```
+new:
+    deploy as new application
 
+profile:
+    dev, test, stage, prod
+
+    default value is dev
+
+    e.g.: hi cicd deploy new profile=stage
+
+image_stream:
+    s2i-java, s2i-nodejs, s2i-nodejs:6.9.5
+
+timezone:
+    Asia/Shanghai is the default value
+
+images_profile:
+    dev, stage
+
+    default value is dev
+```

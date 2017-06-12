@@ -43,6 +43,9 @@ function deploy() {
   if [ "${images_profile}" == "" ]; then
     images_profile=dev
   fi
+  if [ "${profile}" == "" ]; then
+    profile=dev
+  fi
 
   if [ "" != "${new}" ]; then
     from_dir="oc-build"
