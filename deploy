@@ -31,9 +31,6 @@ source "${HI_CLI_HOME}/bin/logging"
 function deploy() {
   # deploy(project, app, ver, "dev", "Asia/Shanghai")
   
-  project_profile="${project}-${profile}"
-  imageTag="latest"
-  
   if [ "${image_stream}" == "" ]; then
     image_stream=s2i-java
   fi
@@ -47,6 +44,8 @@ function deploy() {
     profile=dev
   fi
 
+  project_profile="${project}-${profile}"
+  imageTag="latest"
   if [ "" != "${new}" ]; then
     from_dir="oc-build"
     rm -rf oc-build && mkdir -p oc-build
