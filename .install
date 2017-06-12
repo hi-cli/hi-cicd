@@ -19,29 +19,24 @@
 # limitations under the License.
 #
 # Author: John Deng (john.deng@outlook.com)
-# Updated: Sat Mar 18 15:27:16 CST 2017
-# module: oc
-# Action: 
+# Updated: Wed Mar 22 20:58:31 CST 2017
+# module: cicd
+# Action: .install
 ###############################################################################
-url=${arg3}
-openshift_master=https://${arg3}:8443
-sonarqube_url=http://sonarqube:9000
 
-timezone="Asia/Shanghai"
-port="8080"
+source "${HI_CLI_HOME}/bin/colors"
+source "${HI_CLI_HOME}/bin/clap"
+source "${HI_CLI_HOME}/bin/logging"
+###############################################################################
+function install() {
+  cli="wget -O ${module_dir}/lib/app.jar ${moses_generator}"
+  
+  ${cli}
 
-db_name=my_app
-db_host=localhost
-db_user=root
-db_password=${password}
-db_driver=com.mysql.jdbc.Driver
-group_id=cn.vpclub.moses.${app/-/.}
-artifact_id=mpdemo
+  eval  $1="\${result}"
+  eval  $2="\${cli}"
+}
 
-moses_generator=http://nexus-cicd.172.16.5.95.nip.io/repository/maven-releases/cn/vpclub/moses/mp-generator/1.0.3/mp-generator-1.0.3.jar
-db_host=jdbc:mysql://${db_host}:3306/${db_name}?characterEncoding=utf8
-generated_type=
-author=$(whoami)
+###############################################################################
 
-target=${PWD}
 

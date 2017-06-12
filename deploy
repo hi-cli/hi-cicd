@@ -26,48 +26,112 @@
 ###############################################################################
 
 source "${HI_CLI_HOME}/bin/colors"
-#source "${HI_CLI_HOME}/bin/clap"
 source "${HI_CLI_HOME}/bin/logging"
 ###############################################################################
 function deploy() {
   # deploy(project, app, ver, "dev", "Asia/Shanghai")
-  ver=$(get_version)
-  project_domain="${project}-${domain}"
-  imageTag="latest"
-  log_debug "deploy: ${project}/${app}, ${ver}, ${project_domain}, ${timezone} ${port}"
   
-  if [ "dev" == "${domain}" ]; then
-      rm -rf oc-build && mkdir -p oc-build
+  project_profile="${project}-${profile}"
+  imageTag="latest"
+  
+  if [ "${image_stream}" == "" ]; then
+    image_stream=s2i-java
+  fi
+  if [ "${timezone}" == "" ]; then
+    timezone=Asia/Shanghai
+  fi
+  if [ "${images_profile}" == "" ]; then
+    images_profile=dev
+  fi
+
+  log_debug "deploy: ${project}/${app}, ${ver}, ${project_profile}, ${timezone} ${port}"
+  
+  if [ "" != "${new}" ]; then
+    from_dir="oc-build"
+    rm -rf oc-build && mkdir -p oc-build
+    # check deploy target type is war or jar
+    log_debug "check app type"
+    if [ -f target/${app}.war ]; then
+      ver=$(get_java_app_version)
+      mkdir -p oc-build/deployments
+      cp target/${app}.war oc-build/deployments/ROOT.war
+    elif [ -f target/${app}-${ver}.jar ]; then
+      ver=$(get_java_app_version)
       cp target/${app}-${ver}.jar oc-build/app.jar
-      oc project ${project_domain}
-      # create build. override the exit code since it complains about exising imagestream
-      if [ $(is_exist "bc") == "no" ]; then
-        oc new-build --name=${app} --image-stream=s2i-java --binary=true --labels=app=${app} -n ${project_domain} || true
+    elif [ -f ./package.json ]; then
+      ver=$(get_nodejs_app_version)
+      from_dir="dist"
+      if [ "${build}" == "build" ]; then
+        [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
       fi
-      # build image
-      oc start-build ${app} --from-dir=oc-build --wait=true -n ${project_domain}
+      pwd
+      create_package_json "dist/package.json"
+    else
+      log_error "No java app target found!"
+      exit
+    fi
+    oc project ${project_profile}
+    # create build. override the exit code since it complains about exising imagestream
+    if [ $(is_exist "bc") == "no" ]; then
+      log_debug "create new image stream"
+      oc new-build --name=${app} --image-stream=${image_stream} --binary=true --labels=app=${app} -n ${project_profile} || true
+    fi
+    # build image
+    log_debug "start build"
+    oc start-build ${app} --from-dir="${from_dir}" --wait=true -n ${project_profile}
   else
-      # tag for stage or prod
-      imageTag="${ver}"
-      oc tag ${project}-dev/${app}:latest ${project_domain}/${app}:${imageTag}
-      oc project ${project_domain}
+    # tag for stage or prod
+    log_debug "tag image stream"
+    imageTag="${ver}"
+    oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:${imageTag}
+    oc project ${project_profile}
+  fi
+
+  if [ $? != 0 ]; then
+    log_error "failed to create image stream"
+    return $?
   fi
 
   # deploy image
   if [ $(is_exist "dc") == "no" ]; then
-      oc new-app ${app}:${imageTag} --env TZ=${timezone} -n ${project_domain}
+    log_debug "create new app"
+    oc new-app ${app}:${imageTag} --env SPRING_PROFILES_ACTIVE=${profile} --env TZ=${timezone} -n ${project_profile}
   fi
   if [ $(is_exist "route") == "no" ]; then
-      oc expose svc/${app} --port=${port} -n ${project_domain}
+    log_debug "create router"    
+    oc expose svc/${app} --port=${port} -n ${project_profile}
   fi
 }
 
-function get_version() {
+
+function create_package_json() {
+  log_debug "create_package_json"
+
+  cat > "$1" <<_EOF_
+{
+  "name": "${app}",
+  "version": "${ver}",
+  "description": "nodejs http-server",
+  "scripts": {
+    "start": "http-server . -p 8080"
+  },
+  "author": "John Deng",
+  "license": "MIT"
+}
+_EOF_
+
+}
+
+function get_java_app_version() {
   echo $(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version|grep -Ev '(^\[|Download\w+:)')
 }
 
+function get_nodejs_app_version() {
+  echo $(node -p "require('./package.json').version")
+}
+
 function is_exist() {
-  if [ $(oc get $1 -n ${project_domain} | grep ${app} | wc -l) == 0 ]; then
+  if [ $(oc get $1 -n ${project_profile} | grep ${app} | wc -l) == 0 ]; then
     echo "no"
   else
     echo "yes"

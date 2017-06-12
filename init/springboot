@@ -55,13 +55,16 @@ cat > "$1" <<_EOF_
 # Updated: $(date)
 ###############################################################################
 
-# TODO: added your config below
+# TODO: add your configurations below
 project="$2"
 app="$3"
 image_stream="s2i-java"
 timezone="Asia/Shanghai"
-domain="dev"
+profile="dev"
 port="${port}"
+group_id=cn.vpclub.moses
+artifact_id=${app}
+
 _EOF_
 
 log_debug "$2/$3"

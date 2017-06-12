@@ -1,0 +1,9 @@
+{
+    "cli": "hi cicd",
+    "arguments": {
+        "deploy": {
+            "cli": "hi cicd deploy",
+            "desription": "Deploy application to PaaS"
+        }
+    }
+}
