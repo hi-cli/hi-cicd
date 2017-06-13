@@ -64,17 +64,6 @@ function deploy() {
     if [ "${build}" == "build" ]; then
       mvn clean package
     fi
-
-    if [ -f target/${app}.war ]; then
-      mkdir -p oc-build/deployments
-      cp target/${app}.war oc-build/deployments/ROOT.war
-    elif [ -f target/${app}-${ver}.jar ]; then
-      ver=$(get_java_app_version)
-      cp target/${app}-${ver}.jar oc-build/app.jar
-    else
-      log_error "No app target found!"
-      exit
-    fi
   else
     log_error "No app target found!"
     exit
@@ -82,7 +71,18 @@ function deploy() {
   log_debug "deploy: ${project}/${app}, ${ver}, ${project_profile}, ${timezone} ${port}"
 
   if [ "" != "${new}" ]; then
-    
+    if [ -f target/${app}.war ]; then
+      mkdir -p oc-build/deployments
+      cp target/${app}.war oc-build/deployments/ROOT.war
+    elif [ -f target/${app}-${ver}.jar ]; then
+      ver=$(get_java_app_version)
+      cp target/${app}-${ver}.jar oc-build/app.jar
+    elif [ -f dist/index.html ]; then
+      log_debug "found nodejs app"
+    else
+      log_error "No app target found!"
+      exit
+    fi
     # check deploy target type is war or jar
     oc project ${project_profile}
     # create build. override the exit code since it complains about exising imagestream

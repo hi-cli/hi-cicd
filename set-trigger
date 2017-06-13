@@ -61,20 +61,6 @@ function deploy() {
     log_debug "found java app"
     ver=$(get_java_app_version)
     log_debug "ver: ${ver}"
-    if [ "${build}" == "build" ]; then
-      mvn clean package
-    fi
-
-    if [ -f target/${app}.war ]; then
-      mkdir -p oc-build/deployments
-      cp target/${app}.war oc-build/deployments/ROOT.war
-    elif [ -f target/${app}-${ver}.jar ]; then
-      ver=$(get_java_app_version)
-      cp target/${app}-${ver}.jar oc-build/app.jar
-    else
-      log_error "No app target found!"
-      exit
-    fi
   else
     log_error "No app target found!"
     exit
