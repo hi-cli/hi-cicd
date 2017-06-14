@@ -52,7 +52,7 @@ function deploy() {
     ver=$(get_nodejs_app_version)
     from_dir="dist"
     image_stream="s2i-nodejs:1.0.0"
-    if [ "${build}" == "build" ]; then
+    if [ ! -f dist/index.html ] || [ "${build}" == "build" ]; then
       [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
       create_package_json "dist/package.json"
     fi
@@ -62,6 +62,10 @@ function deploy() {
     log_debug "found java app"
     ver=$(get_java_app_version)
     log_debug "ver: ${ver}"
+    if [ ! -f target/${app}-${ver}.jar ] && [ ! -f target/${app}.war ]; then
+      build="build"
+    fi
+
     if [ "${build}" == "build" ]; then
       mvn clean package
     fi
