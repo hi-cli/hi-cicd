@@ -51,6 +51,7 @@ function deploy() {
     log_debug "found nodejs app"
     ver=$(get_nodejs_app_version)
     from_dir="dist"
+    image_stream="s2i-nodejs:6.9.5-1"
     if [ "${build}" == "build" ]; then
       [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
       create_package_json "dist/package.json"
