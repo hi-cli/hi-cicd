@@ -58,7 +58,7 @@ function deploy() {
     fi
   elif [ -f pom.xml ]; then
     from_dir="oc-build"
-    rm -rf oc-build && mkdir -p oc-build
+    
     log_debug "found java app"
     ver=$(get_java_app_version)
     log_debug "ver: ${ver}"
@@ -78,9 +78,11 @@ function deploy() {
   if [ "" != "${new}" ]; then
     if [ -f target/${app}.war ]; then
       mkdir -p oc-build/deployments
+      rm -rf oc-build && mkdir -p oc-build
       cp target/${app}.war oc-build/deployments/ROOT.war
     elif [ -f target/${app}-${ver}.jar ]; then
       ver=$(get_java_app_version)
+      rm -rf oc-build && mkdir -p oc-build
       cp target/${app}-${ver}.jar oc-build/app.jar
     elif [ -f dist/package.json ]; then
       log_debug "found nodejs app"
@@ -154,7 +156,7 @@ function get_nodejs_app_version() {
 }
 
 function is_exist() {
-  if [ $(oc get $1 -n ${project_profile} | grep ${app} | wc -l) == 0 ]; then
+  if [ $(oc get $1 -n ${project_profile} | grep ${app} | awk '{print $1}' | grep -v "\-${app}" | grep -v "${app}\-" | wc -l) == 0 ]; then
     echo "no"
   else
     echo "yes"
