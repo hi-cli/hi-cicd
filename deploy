@@ -32,16 +32,16 @@ function deploy() {
   # deploy(project, app, ver, "dev", "Asia/Shanghai")
   
   if [ "${image_stream}" == "" ]; then
-    image_stream=s2i-java
+    image_stream="${default_image_stream}"
   fi
   if [ "${timezone}" == "" ]; then
-    timezone=Asia/Shanghai
+    timezone="${default_timezone}"
   fi
   if [ "${images_profile}" == "" ]; then
-    images_profile=dev
+    images_profile="${default_images_profile}"
   fi
   if [ "${profile}" == "" ]; then
-    profile=dev
+    profile="${default_profile}"
   fi
 
   project_profile="${project}-${profile}"
@@ -114,7 +114,7 @@ function deploy() {
   # deploy image
   if [ $(is_exist "dc") == "no" ]; then
     log_debug "create new app"
-    oc new-app ${app}:latest --env SPRING_PROFILES_ACTIVE=${profile} --env TZ=${timezone} -n ${project_profile}
+    oc new-app ${app}:latest --env APP_OPTIONS="${app_options}" --env SPRING_PROFILES_ACTIVE=${profile} --env TZ=${timezone} -n ${project_profile}
   fi
   if [ $(is_exist "route") == "no" ]; then
     log_debug "create router"    
