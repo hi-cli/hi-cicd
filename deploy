@@ -52,10 +52,10 @@ function deploy() {
     ver=$(get_nodejs_app_version)
     from_dir="dist"
     image_stream="s2i-nodejs:1.0.0"
-    # if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
+    if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
       [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
       create_package_json "dist/package.json"
-    # fi
+    fi
   elif [ -f pom.xml ]; then
     from_dir="oc-build"
     
