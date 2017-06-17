@@ -27,6 +27,8 @@
 
 source "${HI_CLI_HOME}/bin/colors"
 source "${HI_CLI_HOME}/bin/logging"
+source "${HI_CLI_HOME}/bin/logging"
+source "${module_dir}/utils/common"
 ###############################################################################
 function deploy() {
   # deploy(project, app, ver, "dev", "Asia/Shanghai")
@@ -53,9 +55,10 @@ function deploy() {
     from_dir="dist"
     image_stream="s2i-nodejs:1.0.0"
     if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
-      [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
-      create_package_json "dist/package.json"
+      npm install
     fi
+    [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
+    create_package_json "dist/package.json"
   elif [ -f pom.xml ]; then
     from_dir="oc-build"
     
@@ -93,7 +96,7 @@ function deploy() {
     # check deploy target type is war or jar
     oc project ${project_profile}
     # create build. override the exit code since it complains about exising imagestream
-    if [ $(is_exist "bc") == "no" ]; then
+    if [ $(is_exist "bc" "${app}" "${project_profile}") == "no" ]; then
       log_debug "create new image stream"
       oc new-build --name=${app} --image-stream=${image_stream} --binary=true --labels=app=${app} -n ${project_profile} || true
     fi
@@ -119,11 +122,11 @@ function deploy() {
   fi
 
   # deploy image
-  if [ $(is_exist "dc") == "no" ]; then
+  if [ $(is_exist "dc" "${app}" "${project_profile}" ) == "no" ]; then
     log_debug "create new app"
     oc new-app ${app}:latest --env APP_OPTIONS="${app_options}" --env SPRING_PROFILES_ACTIVE=${profile} --env TZ=${timezone} -n ${project_profile}
   fi
-  if [ $(is_exist "route") == "no" ]; then
+  if [ $(is_exist "route" "${app}" "${project_profile}") == "no" ]; then
     log_debug "create router"    
     oc expose svc/${app} --port=${port} -n ${project_profile}
   fi
@@ -145,22 +148,6 @@ function create_package_json() {
 }
 _EOF_
 
-}
-
-function get_java_app_version() {
-  echo $(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version|grep -Ev '(^\[|Download\w+:)')
-}
-
-function get_nodejs_app_version() {
-  echo $(node -p "require('./package.json').version")
-}
-
-function is_exist() {
-  if [ $(oc get $1 -n ${project_profile} | grep ${app} | awk '{print $1}' | grep -v "\-${app}" | grep -v "${app}\-" | wc -l) == 0 ]; then
-    echo "no"
-  else
-    echo "yes"
-  fi
 }
 
 function run() {

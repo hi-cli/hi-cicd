@@ -6,34 +6,33 @@
 #
 # Copyright (c) 2014-2017 John Deng (john.deng@outlook.com)
 #
-# Licensed under the Apache License, Version 2.0 (the License);
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#    http:#www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an AS IS BASIS,
+# distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
 # Author: John Deng (john.deng@outlook.com)
-# Updated: Sat Mar 18 15:27:16 CST 2017
-# module: oc
-# Action: 
+# Updated: Mon Mar 27 23:24:29 CST 2017
+# Module: cicd
+# Submodule: 
+# Command: version
 ###############################################################################
 
-openshift_master=https://${arg3}:8443
-sonarqube_url=http://sonarqube:9000
-timezone="Asia/Shanghai"
-port="8080"
-author=$(whoami)
-target=${PWD}
-filters="pom.xml package.json"
-default_image_stream="s2i-java:1.0.2"
-default_timezone="Asia/Shanghai"
-default_images_profile="dev"
-default_profile="dev"
-app_options="-Xmx256m -Xss256k"
-profile=dev
+source "${HI_CLI_HOME}/bin/colors"
+source "${HI_CLI_HOME}/bin/logging"
+source "${module_dir}/utils/common"
+###############################################################################
+function run() {
+  
+  log_info "hi-cicd version: 1.0.0"
+
+}
+
+###############################################################################

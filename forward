@@ -1,0 +1,62 @@
+#!/bin/bash
+###############################################################################
+# Project: hi-cli
+# Description: The cross platform development toolkit - hi-cli
+# Author: John Deng (john.deng@outlook.com)
+#
+# Copyright (c) 2014-2017 John Deng (john.deng@outlook.com)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Author: John Deng (john.deng@outlook.com)
+# Updated: Mon Mar 27 23:24:29 CST 2017
+# Module: cicd
+# Submodule: 
+# Command: forward
+###############################################################################
+
+source "${HI_CLI_HOME}/bin/colors"
+source "${HI_CLI_HOME}/bin/logging"
+source "${module_dir}/utils/common"
+###############################################################################
+function run() {
+  project_profile=${project}-${profile}
+  log_debug "${project_profile} ${app} ${port}"
+
+  oc whoami > /dev/null
+  if [ $? != 0 ]; then
+
+    result=$?
+
+  elif [ $(is_exist "svc" "${app}" "${project_profile}") == "yes" ]; then
+    log_debug "found resource"
+    pod_count=$(trim $(oc get pod -n ${project_profile} | grep -v "\-build" | grep ${app} | awk '{print $1}' | wc -l))
+    pods=$(oc get pod -n ${project_profile} | grep -v "\-build" | grep ${app} | awk '{print $1}')
+
+    if [ "${pod_count}" != "1" ]; then
+      log_debug "${pods}"
+      selection pod "${pods}" "Please select: " "single"
+    else
+      pod=${pods}
+    fi
+  
+    cli="oc port-forward ${pod} ${port} -n ${project_profile}"
+    log_debug "cli: ${cli}"
+    ${cli}
+    result=$?
+  fi
+
+  eval $1="\${result}"
+}
+
+###############################################################################
