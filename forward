@@ -30,7 +30,13 @@ source "${HI_CLI_HOME}/bin/logging"
 source "${module_dir}/utils/common"
 ###############################################################################
 function run() {
-  project_profile=${project}-${profile}
+
+  if [ "${profile}" == "" ]; then
+    project_profile=${project}
+  else
+    project_profile=${project}-${profile}
+  fi
+
   log_debug "${project_profile} ${app} ${port}"
 
   oc whoami > /dev/null
