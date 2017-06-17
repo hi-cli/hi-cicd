@@ -55,6 +55,10 @@ function run() {
     else
       pod=${pods}
     fi
+
+    if [ $(echo "${port}" | grep ":" | wc -l) == 0 ]; then
+      port="${port}:${port}"
+    fi
   
     cli="oc port-forward ${pod} ${port} -n ${project_profile}"
     log_debug "cli: ${cli}"
