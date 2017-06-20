@@ -29,9 +29,12 @@ source "${HI_CLI_HOME}/bin/clap"
 source "${HI_CLI_HOME}/bin/logging"
 ###############################################################################
 function install() {
-  cli="wget -O ${module_dir}/lib/app.jar ${moses_generator}"
+
+  # cli="curl ${oc_url} --output ${HI_CLI_HOME}/bin/oc"
   
-  ${cli}
+  # # ${cli}
+
+  # result=$?
 
   eval  $1="\${result}"
   eval  $2="\${cli}"

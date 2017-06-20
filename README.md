@@ -12,6 +12,17 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/hi-cli/hi-cli/master/bin
 hi package install cicd
 ```
 
+# Download [Openshift Client Tools](https://github.com/openshift/origin/releases)
+
+Download openshift client tools according to your OS, then extract the file 'oc' ('oc.exe') to /usr/bin/
+
+* [openshift-origin-client-tools-v1.5.1-7b451fc-linux-32bit.tar.gz](https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-32bit.tar.gz)
+* [openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz](https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz)
+* [openshift-origin-client-tools-v1.5.1-7b451fc-mac.zip](https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-mac.zip)
+* [openshift-origin-client-tools-v1.5.1-7b451fc-windows.zip](https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-windows.zip)
+
+#### For Chinese users, please download it from [here](http://pan.baidu.com/s/1jHFadoy)
+
 # Usage
 
 Please make sure you are install openshift client: [oc](https://github.com/openshift/origin/releases)
