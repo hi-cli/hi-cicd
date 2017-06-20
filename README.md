@@ -25,7 +25,12 @@ Download openshift client tools according to your OS, then extract the file 'oc'
 
 # Usage
 
-Please make sure you are install openshift client: [oc](https://github.com/openshift/origin/releases)
+Please make sure that openshift client [oc](https://github.com/openshift/origin/releases) is installed on your bash (or git bash). 
+
+type oc version to confirm if oc is installed.
+```bash
+oc version
+```
 
 If you are using zsh, you can install [oc command completion](https://github.com/chmouel/oh-my-zsh-openshift)
 
