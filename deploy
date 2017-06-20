@@ -56,9 +56,10 @@ function deploy() {
     image_stream="s2i-nodejs:1.0.0"
     if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
       npm install
+      [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
+      create_package_json "dist/package.json"
     fi
-    [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
-    create_package_json "dist/package.json"
+    
   elif [ -f pom.xml ]; then
     from_dir="oc-build"
     
@@ -153,11 +154,12 @@ _EOF_
 }
 
 function run() {
-  cli=""
+  cli="hi cicd deploy"
 
   deploy
 
   result=$?
+  log_debug "result: $result"
 
   eval $1="\${result}"
   eval $2="\${cli}"
