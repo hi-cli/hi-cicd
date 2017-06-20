@@ -130,6 +130,8 @@ function deploy() {
     log_debug "create router"    
     oc expose svc/${app} --port=${port} -n ${project_profile}
   fi
+
+  return $?
 }
 
 function create_package_json() {
