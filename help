@@ -1,0 +1,75 @@
+#!/bin/bash
+###############################################################################
+# Project: hi-cli
+# Description: The cross platform development toolkit - hi-cli
+# Author: John Deng (john.deng@outlook.com)
+#
+# Copyright (c) 2014-2017 John Deng (john.deng@outlook.com)
+#
+# Licensed under the Apache License, Version 2.0 (the License);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an AS IS BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Author: John Deng (john.deng@outlook.com)
+# Updated: Sun Mar 19 00:44:07 CST 2017
+# module: heketi
+# Action: help
+###############################################################################
+
+source "${HI_CLI_HOME}/bin/colors"
+#source "${HI_CLI_HOME}/bin/clap"
+source "${HI_CLI_HOME}/bin/logging"
+source "${module_dir}/usage"
+###############################################################################
+
+cmd="hi cicd"
+
+function show_usage() {
+  echo '''usages:
+
+1. confirm if oc is logged in, type below command to check.
+ 
+  oc whoami
+
+2. login openshift server
+  oc login https://devops.vpclub.io:8443
+
+3. cd to your project, e.g. my-project/my-app
+
+  cd my-project/my-app
+
+4. deploy to dev
+
+  hi cicd deploy new build
+
+5. deploy to stage
+
+  hi cicd deploy profile=stage
+
+  '''
+}
+
+
+function run() {
+  cli="heketi-cli help"
+
+  #heketi-cli help
+  show_usage
+
+  result=$?
+
+  eval $1=\${result}
+  eval $2=\${cli}
+}
+
+###############################################################################
+
+
