@@ -35,22 +35,15 @@ cmd="hi cicd"
 function show_usage() {
   echo '''usages:
 
-1. confirm if oc is logged in, type below command to check.
- 
-  oc whoami
-
-2. login openshift server
-  oc login https://devops.vpclub.io:8443
-
-3. cd to your project, e.g. my-project/my-app
+1. cd to your project, e.g. my-project/my-app
 
   cd my-project/my-app
 
-4. deploy to dev
+2. deploy to dev
 
   hi cicd deploy new build
 
-5. deploy to stage
+3. deploy to stage
 
   hi cicd deploy profile=stage
 
