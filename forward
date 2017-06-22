@@ -30,6 +30,8 @@ source "${HI_CLI_HOME}/bin/logging"
 source "${module_dir}/utils/common"
 ###############################################################################
 function run() {
+  
+  ensure_oc_login
 
   if [ "${profile}" == "" ]; then
     project_profile=${project}

@@ -33,6 +33,8 @@ source "${module_dir}/utils/common"
 function deploy() {
   # deploy(project, app, ver, "dev", "Asia/Shanghai")
   
+  ensure_oc_login
+
   if [ "${image_stream}" == "" ]; then
     image_stream="${default_image_stream}"
   fi
