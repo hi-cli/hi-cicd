@@ -49,7 +49,7 @@ function is_exist() {
 }
 ###############################################################################
 function is_oc_logged_in() {
-  oc whoami
+  oc whoami 2>/dev/null
   [ $? == 0 ] && echo "yes" || echo "no"
 }
 

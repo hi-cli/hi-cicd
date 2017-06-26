@@ -35,22 +35,11 @@ function deploy() {
   
   ensure_oc_login
 
-  if [ "${image_stream}" == "" ]; then
-    image_stream="${default_image_stream}"
-  fi
-  if [ "${timezone}" == "" ]; then
-    timezone="${default_timezone}"
-  fi
-  if [ "${images_profile}" == "" ]; then
-    images_profile="${default_images_profile}"
-  fi
-  if [ "${profile}" == "" ]; then
-    profile="${default_profile}"
-  fi
-
-  project_profile="${project}-${profile}"
+  [ "${profile}" == "" ] && project_profile=${project}  || project_profile="${project}-${profile}"
   image_tag="latest"
-
+  
+  env_app_options=""
+  env_profile=""
   if [ -f ./package.json ]; then
     log_debug "found nodejs app"
     ver=$(get_nodejs_app_version)
@@ -61,11 +50,23 @@ function deploy() {
       [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
       create_package_json "dist/package.json"
     fi
-    
+
+  elif [ -f ./SUMMARY.md ] && [ -f ./README.md ]; then
+    log_debug "found gitbook app"
+    [[ "${ver}" == "" ]] && ver="1.0.0"
+    from_dir="dist"
+    image_stream="s2i-gitbook:latest"
+    if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
+      gitbook build . dist
+      create_package_json "dist/package.json"
+    fi
   elif [ -f pom.xml ]; then
-    from_dir="oc-build"
-    
     log_debug "found java app"
+
+    env_profile="--env SPRING_PROFILES_ACTIVE=${profile}"
+    env_app_options="--env APP_OPTIONS=\"${app_options}\""
+
+    from_dir="oc-build"
     ver=$(get_java_app_version)
     log_debug "ver: ${ver}"
     if [ ! -f target/${app}-${ver}.jar ] && [ ! -f target/${app}.war ]; then
@@ -127,8 +128,11 @@ function deploy() {
   # deploy image
   if [ $(is_exist "dc" "${app}" "${project_profile}" ) == "no" ]; then
     log_debug "create new app"
-    oc new-app ${app}:latest --env APP_OPTIONS="${app_options}" --env SPRING_PROFILES_ACTIVE=${profile} --env TZ=${timezone} -n ${project_profile}
+    oc new-app ${app}:latest ${env_app_options} ${env_profile} --env TZ=${timezone} -n ${project_profile}
+
   fi
+  oc env dc ${app} DEPLOYER=$(oc whoami)
+
   if [ $(is_exist "route" "${app}" "${project_profile}") == "no" ]; then
     log_debug "create router"    
     oc expose svc/${app} --port=${port} -n ${project_profile}
