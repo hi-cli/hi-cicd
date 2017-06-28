@@ -30,15 +30,17 @@ source "${HI_CLI_HOME}/bin/clap"
 source "${HI_CLI_HOME}/bin/logging"
 ###############################################################################
 function run() {
-
-  if [ "${dev}" ]; then
-    new_project=${arg4}-${dev}
-    echo oc new-project ${new_project}
-    echo oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n ${new_project}
-    echo oc policy add-role-to-user edit system:serviceaccount:cicd:default -n ${new_project}
+  new_project=${arg4}
+  profiles_selection="dev test stage prod"
+  if [[ "${profiles_selection}" =~ .*${arg5}.* ]]; then
+    new_project=${arg4}-${arg5}
   fi
 
-  ${cli}
+  log_debug "oc new-project ${new_project}"
+  log_debug "oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n ${new_project}"
+  log_debug "oc policy add-role-to-user edit system:serviceaccount:cicd:default -n ${new_project}"
+
+  log_debug "oc adm policy add-scc-to-user anyuid system:serviceaccount:${new_project}:default"
 
   log_debug "arg1: $arg1"
   log_debug "arg2: $arg2"
@@ -46,7 +48,7 @@ function run() {
   log_debug "arg4: $arg4"
   log_debug "arg5: $arg5"
   log_debug "profiles: $profiles"
-
+  
   result=$?
 
   eval $1="\${result}"
