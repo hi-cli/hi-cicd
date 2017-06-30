@@ -31,7 +31,7 @@ source "${module_dir}/utils/common"
 ###############################################################################
 function run() {
   
-  log_info "hi-cicd version: 1.0.1"
+  log_info "hi-cicd version: 1.0.2"
 
 }
 

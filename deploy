@@ -76,17 +76,17 @@ function deploy() {
     if [ "${build}" == "build" ]; then
       mvn clean package
     fi
-  else
-    log_error "No app target found!"
-    exit
   fi  
   log_debug "deploy: ${project}/${app}, ${ver}, ${project_profile}, ${timezone} ${port}"
 
   if [ "" != "${new}" ]; then
     if [ -f target/${app}.war ]; then
       mkdir -p oc-build/deployments
-      rm -rf oc-build && mkdir -p oc-build
+      rm -rf oc-build && mkdir -p oc-build/deployments
+      ls target/${app}.war
+      log_debug "cp target/${app}.war oc-build/deployments/ROOT.war"
       cp target/${app}.war oc-build/deployments/ROOT.war
+      image_stream="s2i-java-war:latest"
     elif [ -f target/${app}-${ver}.jar ]; then
       ver=$(get_java_app_version)
       rm -rf oc-build && mkdir -p oc-build
@@ -129,7 +129,6 @@ function deploy() {
   if [ $(is_exist "dc" "${app}" "${project_profile}" ) == "no" ]; then
     log_debug "create new app"
     oc new-app ${app}:latest ${env_app_options} ${env_profile} --env TZ=${timezone} -n ${project_profile}
-
   fi
   oc env dc ${app} DEPLOYER=$(oc whoami)
 
