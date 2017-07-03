@@ -62,7 +62,7 @@ function deploy() {
   elif [ -f pom.xml ]; then
     log_debug "found java app"
     app_options="-Xmx256m -Xss256k"
-    env_profile="--env SPRING_PROFILES_ACTIVE=${profile}"
+    env_profile=${profile}
 
     from_dir="oc-build"
     ver=$(get_java_app_version)
@@ -128,7 +128,11 @@ function deploy() {
   # deploy image
   if [ $(is_exist "dc" "${app}" "${project_profile}" ) == "no" ]; then
     log_debug "create new app"
-    oc new-app ${app}:latest "${env_profile}" --env TZ=${timezone} -n ${project_profile}
+    oc new-app ${app}:latest --env TZ=${timezone} -n ${project_profile}
+    if [ "${env_profile}" != "" ]; then
+      log_debug "add app options"
+      oc env dc ${app} SPRING_PROFILES_ACTIVE="${profile}"
+    fi
     if [ "${app_options}" != "" ]; then
       log_debug "add app options"
       oc env dc ${app} APP_OPTIONS="${app_options}"
