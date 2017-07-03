@@ -64,7 +64,7 @@ function deploy() {
     log_debug "found java app"
 
     env_profile="--env SPRING_PROFILES_ACTIVE=${profile}"
-    env_app_options="--env APP_OPTIONS=\'${app_options}\'"
+    env_app_options="--env APP_OPTIONS='${app_options}'"
 
     from_dir="oc-build"
     ver=$(get_java_app_version)
