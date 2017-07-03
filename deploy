@@ -64,7 +64,7 @@ function deploy() {
     log_debug "found java app"
 
     env_profile="--env SPRING_PROFILES_ACTIVE=${profile}"
-    env_app_options="--env APP_OPTIONS=\"${app_options}\""
+    env_app_options="--env APP_OPTIONS=\'${app_options}\'"
 
     from_dir="oc-build"
     ver=$(get_java_app_version)
@@ -99,6 +99,8 @@ function deploy() {
     fi
     # check deploy target type is war or jar
     oc project ${project_profile}
+    log_debug "$(is_exist "bc" "${app}" "${project_profile}")"
+
     # create build. override the exit code since it complains about exising imagestream
     if [ $(is_exist "bc" "${app}" "${project_profile}") == "no" ]; then
       log_debug "create new image stream"
@@ -128,7 +130,7 @@ function deploy() {
   # deploy image
   if [ $(is_exist "dc" "${app}" "${project_profile}" ) == "no" ]; then
     log_debug "create new app"
-    oc new-app ${app}:latest ${env_app_options} ${env_profile} --env TZ=${timezone} -n ${project_profile}
+    oc new-app ${app}:latest "${env_app_options}" "${env_profile}" --env TZ=${timezone} -n ${project_profile}
   fi
   oc env dc ${app} DEPLOYER=$(oc whoami)
 
