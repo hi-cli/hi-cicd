@@ -40,9 +40,8 @@ function is_exist() {
   resource=$1
   app=$2
   project_profile=$3
-  log_debug "resource: $resource"
-  log_debug "$(oc get "${resource}" -n ${project_profile} -l app=${app} | grep -v NAME)"
-  if [ $(oc get "${resource}" -n ${project_profile} -l app=${app} | grep -v NAME | awk '{print $1}' | grep -v "\-${app}" | grep -v "${app}\-" | wc -l) == 0 ]; then
+  
+  if [ $(oc get "${resource}" -n ${project_profile} -l app=${app} | grep -v NAME | awk '{print $1}' | wc -l) == 0 ]; then
     echo "no"
   else
     echo "yes"
