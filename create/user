@@ -35,15 +35,13 @@ function run() {
     log_error "please specify username and password"
   fi
 
-  echo htpasswd -b /etc/origin/master/htpasswd "${arg4}" "${arg5}"
-
-  #${cli}
-
   log_debug "arg1: $arg1"
   log_debug "arg2: $arg2"
   log_debug "arg3: $arg3"
   log_debug "arg4: $arg4"
   log_debug "arg5: $arg5"
+
+  hi ansible shell masters htpasswd -b /etc/origin/master/htpasswd "${arg4}" "${arg5}"
 
   result=$?
 
