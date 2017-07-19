@@ -40,13 +40,8 @@ function run() {
   fi
 
   log_debug "${project_profile} ${app} ${port}"
-
-  oc whoami > /dev/null
-  if [ $? != 0 ]; then
-
-    result=$?
-
-  elif [ $(is_exist "svc" "${app}" "${project_profile}") == "yes" ]; then
+  log_debug $(is_exist "svc" "${app}" "${project_profile}")
+  if [ $(is_exist "svc" "${app}" "${project_profile}") == "yes" ]; then
     log_debug "found resource"
     pod_count=$(trim $(oc get pod -n ${project_profile} | grep -v "\-build" | grep ${app} | awk '{print $1}' | wc -l))
     pods=$(oc get pod -n ${project_profile} | grep -v "\-build" | grep ${app} | awk '{print $1}')
@@ -64,7 +59,15 @@ function run() {
   
     cli="oc port-forward ${pod} ${port} -n ${project_profile}"
     log_debug "cli: ${cli}"
+
     ${cli}
+
+    if [ "${keepalive}" != "" ]; then
+      while [[ true ]]; do
+        ${cli}
+      done
+    fi
+    
     result=$?
   fi
 

@@ -112,6 +112,7 @@ function deploy() {
     log_debug "tag image stream"
     image_tag="${ver}"
     log_debug "image_tag: ${image_tag}, ver: ${ver}"
+    log_debug "oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:latest"
 
     # tag new image stream
     oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:${image_tag}
