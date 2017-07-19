@@ -29,7 +29,7 @@ source "${HI_CLI_HOME}/bin/colors"
 source "${HI_CLI_HOME}/bin/logging"
 source "${module_dir}/utils/common"
 ###############################################################################
-function run() {
+function forward_port() {
   
   ensure_oc_login
 
@@ -63,14 +63,23 @@ function run() {
 
     ${cli}
 
-    if [ "${keepalive}" != "" ]; then
-      while [[ true ]]; do
-        ${cli}
-      done
-    fi
-
-    result=$?
+    return $?
   fi
+
+  return 1
+}
+
+function run() {
+
+  forward_port
+
+  if [ "${keepalive}" != "" ]; then
+    while [[ true ]]; do
+      forward_port
+    done
+  fi
+
+  result=$?
 
   eval $1="\${result}"
 }
