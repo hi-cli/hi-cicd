@@ -59,6 +59,7 @@ function run() {
   
     cli="oc port-forward ${pod} ${port} -n ${project_profile}"
     log_debug "cli: ${cli}"
+    log_debug "${keepalive}"
 
     ${cli}
 
@@ -67,7 +68,7 @@ function run() {
         ${cli}
       done
     fi
-    
+
     result=$?
   fi
 
