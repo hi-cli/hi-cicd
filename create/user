@@ -41,6 +41,13 @@ function run() {
   log_debug "arg4: $arg4"
   log_debug "arg5: $arg5"
 
+  hi ansible ping masters
+
+  if [ $? != 0 ]; then
+    log_error "please make sure you are in the right working directory?"
+    exit
+  fi
+
   hi ansible shell masters htpasswd -b /etc/origin/master/htpasswd "${arg4}" "${arg5}"
 
   result=$?
