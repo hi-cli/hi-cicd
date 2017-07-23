@@ -40,8 +40,8 @@ function forward_port() {
   fi
 
   log_debug "${project_profile} ${app} ${port}"
-  log_debug $(is_exist "svc" "${app}" "${project_profile}")
-  if [ $(is_exist "svc" "${app}" "${project_profile}") == "yes" ]; then
+  log_debug $(is_exist "pod" "${app}" "${project_profile}")
+  if [ $(is_exist "pod" "${app}" "${project_profile}") == "yes" ]; then
     log_debug "found resource"
     pod_count=$(trim $(oc get pod -n ${project_profile} | grep -v "\-build" | grep ${app} | awk '{print $1}' | wc -l))
     pods=$(oc get pod -n ${project_profile} | grep -v "\-build" | grep ${app} | awk '{print $1}')
@@ -57,7 +57,7 @@ function forward_port() {
       port="${port}:${port}"
     fi
   
-    cli="oc port-forward ${pod} ${port} -n ${project_profile}"
+    cli="${sudo} oc port-forward ${pod} ${port} -n ${project_profile}"
     log_debug "cli: ${cli}"
     log_debug "${keepalive}"
 

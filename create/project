@@ -37,10 +37,14 @@ function run() {
   fi
 
   log_debug "oc new-project ${new_project}"
+  oc new-project ${new_project}
   log_debug "oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n ${new_project}"
+  oc policy add-role-to-user edit system:serviceaccount:cicd:jenkins -n ${new_project}
   log_debug "oc policy add-role-to-user edit system:serviceaccount:cicd:default -n ${new_project}"
+  oc policy add-role-to-user edit system:serviceaccount:cicd:default -n ${new_project}
 
   log_debug "oc adm policy add-scc-to-user anyuid system:serviceaccount:${new_project}:default"
+  oc adm policy add-scc-to-user anyuid system:serviceaccount:${new_project}:default
 
   log_debug "arg1: $arg1"
   log_debug "arg2: $arg2"
