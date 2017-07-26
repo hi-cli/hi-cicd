@@ -46,7 +46,12 @@ function deploy() {
     image_stream="s2i-nodejs:1.0.0"
     if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
       npm install
-      [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile}
+      if [ "${app_code}" == "" ]; then
+        export app_code=$(git branch | grep '\*' | awk '{print $NF}')
+      fi
+      
+      [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile} 
+
       create_package_json "dist/package.json"
     fi
 
