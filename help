@@ -42,9 +42,21 @@ function show_usage() {
 
   hi cicd deploy new build
 
-3. deploy to stage
+3. deploy to stage as image tag
 
   hi cicd deploy profile=stage
+
+4. deploy to stage as new build
+
+  hi cicd deploy new build profile=stage  
+
+5. deploy to prod as new build
+
+  hi cicd deploy new build profile=prod
+
+6. deploy to prod as image tag
+
+  hi cicd deploy profile=prod
 
   '''
 }
