@@ -43,7 +43,7 @@ function deploy() {
     log_debug "found nodejs app"
     ver=$(get_nodejs_app_version)
     from_dir="dist"
-    image_stream="s2i-nodejs:1.0.0"
+    image_stream="s2i-nodejs:latest"
     if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
       npm install
       
