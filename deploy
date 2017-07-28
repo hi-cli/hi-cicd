@@ -117,6 +117,14 @@ function deploy() {
     log_debug "image_tag: ${image_tag}, ver: ${ver}"
     log_debug "oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:latest"
 
+    if [ "${images_profile}" == "" ]; then
+      if [ "${profile}" == "stage" ]; then
+        images_profile="dev"
+      elif [ "${profile}" == "prod" ]; then 
+        images_profile="stage"
+      fi 
+    fi
+
     # tag new image stream
     oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:${image_tag}
     oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:latest
