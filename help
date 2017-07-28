@@ -63,7 +63,7 @@ function show_usage() {
 
 
 function run() {
-  cli="heketi-cli help"
+  cli="hi cicd help"
 
   #heketi-cli help
   show_usage
