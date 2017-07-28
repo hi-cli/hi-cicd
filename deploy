@@ -43,7 +43,7 @@ function deploy() {
     log_debug "found nodejs app"
     ver=$(get_nodejs_app_version)
     from_dir="dist"
-    image_stream="s2i-nodejs:latest"
+    image_stream="${is_s2i_nodejs}"
     if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
       npm install
       
@@ -56,7 +56,7 @@ function deploy() {
     log_debug "found gitbook app"
     [[ "${ver}" == "" ]] && ver="1.0.0"
     from_dir="dist"
-    image_stream="s2i-gitbook:latest"
+    image_stream="${is_s2i_gitbook}"
     if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
       gitbook build . dist
       create_package_json "dist/package.json"
@@ -67,6 +67,7 @@ function deploy() {
     env_profile=${profile}
 
     from_dir="oc-build"
+    image_stream="${is_s2i_java}"
     ver=$(get_java_app_version)
     log_debug "ver: ${ver}"
     if [ ! -f target/${app}-${ver}.jar ] && [ ! -f target/${app}.war ]; then
@@ -86,7 +87,7 @@ function deploy() {
       ls target/${app}.war
       log_debug "cp target/${app}.war oc-build/deployments/ROOT.war"
       cp target/${app}.war oc-build/deployments/ROOT.war
-      image_stream="s2i-java-war:latest"
+      image_stream="${is_s2i_java_war}"
     elif [ -f target/${app}-${ver}.jar ]; then
       ver=$(get_java_app_version)
       rm -rf oc-build && mkdir -p oc-build
