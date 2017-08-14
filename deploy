@@ -150,7 +150,11 @@ function deploy() {
       oc env dc ${app} APP_OPTIONS="${app_options}"
     fi
   fi
-  oc env dc ${app} DEPLOYER=$(oc whoami)
+  # set Automatically start a new deployment when the image changes
+  if [ "$(oc set triggers dc/${app} -a | grep image | awk '{print $5}')" == "false" ]; then
+    oc set triggers dc/${app} --auto
+  fi
+  oc env dc ${app} DEPLOYER="$(oc whoami) ($(whoami))"
 
   if [ $(is_exist "route" "${app}" "${project_profile}") == "no" ]; then
     log_debug "create router"    
