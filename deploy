@@ -24,6 +24,8 @@
 # Submodule: 
 # Command: deploy
 ###############################################################################
+# TODO: 
+# 1. add app_postfix to start new pod for blue-green update
 
 source "${HI_CLI_HOME}/bin/colors"
 source "${HI_CLI_HOME}/bin/logging"
@@ -33,6 +35,12 @@ source "${module_dir}/utils/common"
 function deploy() {
   # deploy(project, app, ver, "dev", "Asia/Shanghai")
   
+  # ensure hi init 
+  if [ ! -f hi.conf ]; then
+    log_warn "Please run 'hi init' first!"
+    return -1
+  fi
+
   ensure_oc_login
 
   [ "${profile}" == "" ] && project_profile=${project}  || project_profile="${project}-${profile}"
@@ -63,7 +71,7 @@ function deploy() {
     fi
   elif [ -f pom.xml ]; then
     log_debug "found java app"
-    app_options="-Xmx256m -Xss256k"
+    app_options="-Xmx256m -Xss256k -Djava.net.preferIPv4Stack=true"
     env_profile=${profile}
 
     from_dir="oc-build"
@@ -75,10 +83,17 @@ function deploy() {
     fi
 
     if [ "${build}" == "build" ]; then
+      log_debug "build app ..."
       mvn clean package
     fi
-  fi  
-  log_debug "deploy: ${project}/${app}, ${ver}, ${project_profile}, ${timezone} ${port}"
+  fi 
+
+  # change app name for 
+  app_name=${app}
+  if [ "${app_ver}" != "" ]; then
+    app_name="${app}-${app_ver}"
+  fi
+  log_info "deploy ${project}/${app_name}, ver: ${ver}, project: ${project_profile}, timezone: ${timezone} port: ${port}"
 
   if [ "" != "${new}" ]; then
     if [ -f target/${app}.war ]; then
@@ -100,34 +115,40 @@ function deploy() {
     fi
     # check deploy target type is war or jar
     oc project ${project_profile}
-    log_debug "$(is_exist "bc" "${app}" "${project_profile}")"
+
+    # set labels_options
+    if [ "${jcluster}" != "" ]; then
+      labels="jcluster=${jcluster}"
+      labels_option="--labels=${labels}"
+    fi
+    labels_option="--labels=app=${app_name} ${labels_option}"
 
     # create build. override the exit code since it complains about exising imagestream
-    if [ $(is_exist "bc" "${app}" "${project_profile}") == "no" ]; then
+    if [ $(is_exist "bc" "${app_name}" "${project_profile}") == "no" ]; then
       log_debug "create new image stream"
-      oc new-build --name=${app} --image-stream=${image_stream} --binary=true --labels=app=${app} -n ${project_profile} || true
+      oc new-build --name=${app_name} --image-stream=${image_stream} --binary=true --labels=app=${app_name} -n ${project_profile} || true
     fi
     # build image
     log_debug "start build"
-    oc start-build ${app} --from-dir="${from_dir}" --wait=true -n ${project_profile}
+    oc start-build ${app_name} --from-dir="${from_dir}" --wait=true -n ${project_profile}
   else
     # tag for stage or prod
     log_debug "tag image stream"
     image_tag="${ver}"
     log_debug "image_tag: ${image_tag}, ver: ${ver}"
-    log_debug "oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:latest"
+    log_debug "oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:latest"
 
     if [ "${images_profile}" == "" ]; then
-      if [ "${profile}" == "stage" ]; then
+      if [ "${profile}" == "stage" ] || [ "${profile}" == "test" ]; then
         images_profile="dev"
       elif [ "${profile}" == "prod" ]; then 
         images_profile="stage"
-      fi 
+      fi
     fi
 
     # tag new image stream
-    oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:${image_tag}
-    oc tag ${project}-${images_profile}/${app}:latest ${project_profile}/${app}:latest
+    oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:${image_tag}
+    oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:latest
     # switch to new
     oc project ${project_profile}
   fi
@@ -137,30 +158,58 @@ function deploy() {
     return $?
   fi
 
+  # set env_options
+  deployer="$(oc whoami) ($(whoami))"
+  master_url="$(oc project | awk '{print $NF}' | sed -e s/\"//g | sed 's/.$//')"
+  if [ "${app_options}" != "" ]; then
+      log_debug "set app options"
+      app_options="${app_options} -DMASTER_URL=${master_url} -DNAMESPACE=${project_profile} -DLABELS=${labels}"
+  fi
+
   # deploy image
-  if [ $(is_exist "dc" "${app}" "${project_profile}" ) == "no" ]; then
+  if [ $(is_exist "dc" "${app_name}" "${project_profile}" ) == "no" ]; then
     log_debug "create new app"
-    oc new-app ${app}:latest --env TZ=${timezone} -n ${project_profile}
-    if [ "${env_profile}" != "" ]; then
-      log_debug "add app options"
-      oc env dc ${app} SPRING_PROFILES_ACTIVE="${profile}"
-    fi
     if [ "${app_options}" != "" ]; then
-      log_debug "add app options"
-      oc env dc ${app} APP_OPTIONS="${app_options}"
+      log_debug "set app options"
+      app_options="${app_options} -DMASTER_URL=${master_url} -DNAMESPACE=${project_profile} -DLABELS=${labels}"
+      env_app_options="SPRING_PROFILES_ACTIVE=\"${profile}\" --env APP_OPTIONS=\"${app_options}\" "
+      oc new-app ${app_name}:latest \
+        --env SPRING_PROFILES_ACTIVE="${profile}" \
+        --env APP_OPTIONS="${app_options}" \
+        --env DEPLOYER="${deployer}" \
+        --env TZ="${timezone}" \
+        ${labels_option} \
+        -n ${project_profile}
+    else
+      oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env TZ="${timezone}" ${labels_option} -n ${project_profile}
+    fi
+    # if [ "${env_profile}" != "" ] && [ "${app_options}" != "" ]; then
+    #   log_debug "add app options"
+    #   oc env dc ${app_name} SPRING_PROFILES_ACTIVE="${profile}"
+    # fi
+  fi
+
+  # set Automatically start a new deployment when the image changes
+  if [ "$(oc set triggers dc/${app_name} -a | grep image | awk '{print $5}')" == "false" ]; then
+    oc set triggers dc/${app_name} --auto
+  fi
+
+  # only set env according user's need
+  if [ "${env}" != "" ]; then
+    if [ "${app_options}" != "" ]; then
+      oc env dc ${app_name} APP_OPTIONS="${app_options} " DEPLOYER="${deployer}"
+    else
+      oc env dc ${app_name} DEPLOYER="${deployer}"
     fi
   fi
-  # set Automatically start a new deployment when the image changes
-  if [ "$(oc set triggers dc/${app} -a | grep image | awk '{print $5}')" == "false" ]; then
-    oc set triggers dc/${app} --auto
-  fi
-  oc env dc ${app} DEPLOYER="$(oc whoami) ($(whoami))"
-
-  if [ $(is_exist "route" "${app}" "${project_profile}") == "no" ]; then
+  
+  # expose service
+  if [ $(is_exist "route" "${app_name}" "${project_profile}") == "no" ]; then
     log_debug "create router"    
-    oc expose svc/${app} --port=${port} -n ${project_profile}
+    oc expose svc/${app_name} --port=${port} -n ${project_profile}
   fi
 
+  # done
   return $?
 }
 

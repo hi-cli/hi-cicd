@@ -58,7 +58,7 @@ cat > "$1" <<_EOF_
 # TODO: add your configurations below
 project="$2"
 app="$3"
-image_stream="s2i-java"
+is_s2i_java="s2i-java:latest"
 timezone="Asia/Shanghai"
 profile="dev"
 port="${port}"
