@@ -171,8 +171,6 @@ function deploy() {
     log_debug "create new app"
     if [ "${app_options}" != "" ]; then
       log_debug "set app options"
-      app_options="${app_options} -DMASTER_URL=${master_url} -DNAMESPACE=${project_profile} -DLABELS=${labels}"
-      env_app_options="SPRING_PROFILES_ACTIVE=\"${profile}\" --env APP_OPTIONS=\"${app_options}\" "
       oc new-app ${app_name}:latest \
         --env SPRING_PROFILES_ACTIVE="${profile}" \
         --env APP_OPTIONS="${app_options}" \
