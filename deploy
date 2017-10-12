@@ -117,8 +117,8 @@ function deploy() {
     oc project ${project_profile}
 
     # set labels_options
-    if [ "${jcluster}" != "" ]; then
-      labels="jcluster=${jcluster}"
+    if [ "${cluster}" != "" ]; then
+      labels="cluster=${cluster}"
       labels_option="--labels=${labels}"
     fi
     labels_option="--labels=app=${app_name} ${labels_option}"
