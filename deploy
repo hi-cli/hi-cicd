@@ -119,7 +119,7 @@ function deploy() {
     # set labels_options
     if [ "${cluster}" != "" ]; then
       labels="cluster=${cluster}"
-      labels_option="--labels=${labels}"
+      labels_option="--labels=${labels}"  
     fi
     labels_option="--labels=app=${app_name} ${labels_option}"
 
@@ -163,7 +163,7 @@ function deploy() {
   master_url="$(oc project | awk '{print $NF}' | sed -e s/\"//g | sed 's/.$//')"
   if [ "${app_options}" != "" ]; then
       log_debug "set app options"
-      app_options="${app_options} -DMASTER_URL=${master_url} -DNAMESPACE=${project_profile} -DLABELS=${labels}"
+      app_options="${app_options} -DMASTER_URL=${master_url} -DNAMESPACE=${project_profile} -DLABELS=${labels} -Dapp.cluster-name=${cluster}"
   fi
 
   # deploy image

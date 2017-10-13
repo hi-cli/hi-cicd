@@ -46,6 +46,9 @@ function run() {
   log_debug "oc adm policy add-scc-to-user anyuid system:serviceaccount:${new_project}:default"
   oc adm policy add-scc-to-user anyuid system:serviceaccount:${new_project}:default
 
+  # add view permission to app, e.g. app can get pods through api, kube ping need
+  oc policy add-role-to-user view system:serviceaccount:${new_project}:default -n ${new_project}
+
   log_debug "arg1: $arg1"
   log_debug "arg2: $arg2"
   log_debug "arg3: $arg3"
