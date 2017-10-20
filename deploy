@@ -94,6 +94,25 @@ function deploy() {
     app_name="${app}-${app_ver}"
   fi
   log_info "deploy ${project}/${app_name}, ver: ${ver}, project: ${project_profile}, timezone: ${timezone} port: ${port}"
+  
+  deployer="$(oc whoami) ($(whoami))"
+  rev="$(git show --summary --pretty='%H')"
+  if [ $(is_exist "dc" "${app_name}" "${project_profile}" ) == "yes" ]; then
+    # remove config triggers
+    log_debug "check config trigger"
+    if [ "$(oc set triggers dc/simple-order-command -a | grep "config " | awk '{print $3}')" == "true" ]; then
+      log_debug "set config trigger"
+      oc set triggers dc/${app_name} --from-config --remove
+    fi
+
+    # only set env according user's need
+    log_debug "set env for dc"
+    if [ "${app_options}" != "" ]; then
+      oc env dc ${app_name} APP_OPTIONS="${app_options}" DEPLOYER="${deployer}" REVISION="${rev}"
+    else
+      oc env dc ${app_name} DEPLOYER="${deployer}" REVISION="${rev}"
+    fi
+  fi
 
   if [ "" != "${new}" ]; then
     if [ -f target/${app}.war ]; then
@@ -159,7 +178,6 @@ function deploy() {
   fi
 
   # set env_options
-  deployer="$(oc whoami) ($(whoami))"
   master_url="$(oc project | awk '{print $NF}' | sed -e s/\"//g | sed 's/.$//')"
   if [ "${app_options}" != "" ]; then
       log_debug "set app options"
@@ -176,10 +194,16 @@ function deploy() {
         --env APP_OPTIONS="${app_options}" \
         --env DEPLOYER="${deployer}" \
         --env TZ="${timezone}" \
+        --env REVISION="${rev}" \
         ${labels_option} \
         -n ${project_profile}
     else
-      oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env TZ="${timezone}" ${labels_option} -n ${project_profile}
+      oc new-app ${app_name}:latest \
+        --env DEPLOYER="${deployer}" \
+        --env TZ="${timezone}" \
+        --env REVISION="${rev}" \
+        ${labels_option} \
+        -n ${project_profile}
     fi
     # if [ "${env_profile}" != "" ] && [ "${app_options}" != "" ]; then
     #   log_debug "add app options"
@@ -188,27 +212,11 @@ function deploy() {
   fi
 
   # set Automatically start a new deployment when the image changes
+  log_debug "check image trigger"
   if [ "$(oc set triggers dc/${app_name} -a | grep image | awk '{print $5}')" == "false" ]; then
+    log_debug "set image trigger"
     oc set triggers dc/${app_name} --auto=true
   fi
-
-  # remove config triggers
-  if [ "$(oc set triggers dc/simple-order-command -a | grep "config " | awk '{print $3}')" == "true" ]; then
-    oc set triggers dc/${app_name} --from-config=false
-  fi
-
-  oc set triggers dc/${app_name} --from-config=false
-
-  rev="$(git show --summary --pretty='%H')"
-
-  # only set env according user's need
-  if [ "${app_options}" != "" ]; then
-    oc env dc ${app_name} APP_OPTIONS="${app_options}" DEPLOYER="${deployer}" REVISION="${rev}"
-  else
-    oc env dc ${app_name} DEPLOYER="${deployer}" REVISION="${rev}"
-  fi
-
-  oc set triggers dc/${app_name} --from-config=true
 
   # expose service
   if [ $(is_exist "route" "${app_name}" "${project_profile}") == "no" ]; then
