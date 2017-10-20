@@ -195,9 +195,9 @@ function deploy() {
   # only set env according user's need
   if [ "${env}" != "" ]; then
     if [ "${app_options}" != "" ]; then
-      oc env dc ${app_name} APP_OPTIONS="${app_options} " DEPLOYER="${deployer}"
+      oc env dc ${app_name} APP_OPTIONS="${app_options} " DEPLOYER="${deployer}" VER="$(git show --summary --pretty='%H')"
     else
-      oc env dc ${app_name} DEPLOYER="${deployer}"
+      oc env dc ${app_name} DEPLOYER="${deployer}" VER="$(git show --summary --pretty='%H')"
     fi
   fi
   
