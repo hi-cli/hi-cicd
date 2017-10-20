@@ -179,7 +179,7 @@ function deploy() {
         ${labels_option} \
         -n ${project_profile}
     else
-      oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env TZ="${timezone}" ${labels_option} -n ${project_profile}
+      oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env VER="$(git show --summary --pretty='%H')" --env TZ="${timezone}" ${labels_option} -n ${project_profile}
     fi
     # if [ "${env_profile}" != "" ] && [ "${app_options}" != "" ]; then
     #   log_debug "add app options"
