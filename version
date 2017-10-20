@@ -31,7 +31,7 @@ source "${module_dir}/utils/common"
 ###############################################################################
 function run() {
   
-  log_info "version: 1.1.3"
+  log_info "version: 1.1.4"
   log_info "updated time: 2017-10-20"
 
 }

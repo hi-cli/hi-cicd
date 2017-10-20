@@ -179,7 +179,7 @@ function deploy() {
         ${labels_option} \
         -n ${project_profile}
     else
-      oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env VER="$(git show --summary --pretty='%H')" --env TZ="${timezone}" ${labels_option} -n ${project_profile}
+      oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env TZ="${timezone}" ${labels_option} -n ${project_profile}
     fi
     # if [ "${env_profile}" != "" ] && [ "${app_options}" != "" ]; then
     #   log_debug "add app options"
@@ -189,18 +189,27 @@ function deploy() {
 
   # set Automatically start a new deployment when the image changes
   if [ "$(oc set triggers dc/${app_name} -a | grep image | awk '{print $5}')" == "false" ]; then
-    oc set triggers dc/${app_name} --auto
+    oc set triggers dc/${app_name} --auto=true
   fi
 
-  # only set env according user's need
-  if [ "${env}" != "" ]; then
-    if [ "${app_options}" != "" ]; then
-      oc env dc ${app_name} APP_OPTIONS="${app_options} " DEPLOYER="${deployer}" VER="$(git show --summary --pretty='%H')"
-    else
-      oc env dc ${app_name} DEPLOYER="${deployer}" VER="$(git show --summary --pretty='%H')"
-    fi
+  # remove config triggers
+  if [ "$(oc set triggers dc/simple-order-command -a | grep "config " | awk '{print $3}')" == "true" ]; then
+    oc set triggers dc/${app_name} --from-config=false
   fi
-  
+
+  oc set triggers dc/${app_name} --from-config=false
+
+  rev="$(git show --summary --pretty='%H')"
+
+  # only set env according user's need
+  if [ "${app_options}" != "" ]; then
+    oc env dc ${app_name} APP_OPTIONS="${app_options}" DEPLOYER="${deployer}" REVISION="${rev}"
+  else
+    oc env dc ${app_name} DEPLOYER="${deployer}" REVISION="${rev}"
+  fi
+
+  oc set triggers dc/${app_name} --from-config=true
+
   # expose service
   if [ $(is_exist "route" "${app_name}" "${project_profile}") == "no" ]; then
     log_debug "create router"    
