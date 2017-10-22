@@ -84,9 +84,14 @@ function deploy() {
 
     if [ "${build}" == "build" ]; then
       log_debug "build app ..."
-      mvn clean package
+      mvn clean install
     fi
-  fi 
+  fi
+
+  if [ "${need_deploy}" == "false" ]; then
+    log_info "done"
+    return 0
+  fi
 
   # change app name for 
   app_name=${app}
@@ -94,9 +99,25 @@ function deploy() {
     app_name="${app}-${app_ver}"
   fi
   log_info "deploy ${project}/${app_name}, ver: ${ver}, project: ${project_profile}, timezone: ${timezone} port: ${port}"
-  
+
   deployer="$(oc whoami) ($(whoami))"
   rev="$(git show --summary --pretty='%H')"
+  # set labels_options
+  if [ "${cluster}" != "" ]; then
+    labels="cluster=${cluster}"
+    labels_option="--labels=${labels}"  
+  fi
+  labels_option="--labels=app=${app_name} ${labels_option}"
+  # set env_options
+  master_url="$(oc project | awk '{print $NF}' | sed -e s/\"//g | sed 's/.$//')"
+  if [ "${app_options}" != "" ]; then
+      log_debug "set app options"
+      app_options="${app_options} -DMASTER_URL=${master_url} -DNAMESPACE=${project_profile} -DLABELS=${labels}"
+      if [ "${cluster}" != "" ]; then
+        app_options="${app_options} -Dapp.cluster-name=${cluster}"
+      fi
+  fi
+
   if [ $(is_exist "dc" "${app_name}" "${project_profile}" ) == "yes" ]; then
     # remove config triggers
     log_debug "check config trigger"
@@ -135,13 +156,6 @@ function deploy() {
     # check deploy target type is war or jar
     oc project ${project_profile}
 
-    # set labels_options
-    if [ "${cluster}" != "" ]; then
-      labels="cluster=${cluster}"
-      labels_option="--labels=${labels}"  
-    fi
-    labels_option="--labels=app=${app_name} ${labels_option}"
-
     # create build. override the exit code since it complains about exising imagestream
     if [ $(is_exist "bc" "${app_name}" "${project_profile}") == "no" ]; then
       log_debug "create new image stream"
@@ -175,13 +189,6 @@ function deploy() {
   if [ $? != 0 ]; then
     log_error "failed to create image stream"
     return $?
-  fi
-
-  # set env_options
-  master_url="$(oc project | awk '{print $NF}' | sed -e s/\"//g | sed 's/.$//')"
-  if [ "${app_options}" != "" ]; then
-      log_debug "set app options"
-      app_options="${app_options} -DMASTER_URL=${master_url} -DNAMESPACE=${project_profile} -DLABELS=${labels} -Dapp.cluster-name=${cluster}"
   fi
 
   # deploy image
