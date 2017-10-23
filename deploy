@@ -171,12 +171,15 @@ function deploy() {
     log_debug "image_tag: ${image_tag}, ver: ${ver}"
     log_debug "oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:latest"
 
-    if [ "${images_profile}" == "" ]; then
-      if [ "${profile}" == "stage" ] || [ "${profile}" == "test" ]; then
-        images_profile="dev"
-      elif [ "${profile}" == "prod" ]; then 
-        images_profile="stage"
-      fi
+    if [ $(oc get is ${app} -n ${project}-dev | grep latest | wc -l) != 0 ]; then
+      log_debug "found image steam ${app} from ${project}-dev"
+      images_profile="dev"
+    elif [ $(oc get is ${app} -n ${project}-stage | grep latest | wc -l) != 0 ]; then
+      log_debug "found image steam ${app} from ${project}-stage"
+      images_profile="stage"
+    else
+      log_error "no image stream found!"
+      return -3
     fi
 
     # tag new image stream
