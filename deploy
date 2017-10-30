@@ -112,13 +112,17 @@ function deploy() {
   master_url="$(oc project | awk '{print $NF}' | sed -e s/\"//g | sed 's/.$//')"
   if [ "${app_options}" != "" ]; then
       log_debug "set app options"
-      app_options="${app_options} -DMASTER_URL=${master_url} -DNAMESPACE=${project_profile} -DLABELS=${labels}"
+      if [ "${namespaces_constraint}" != "" ]; then
+        app_options="${app_options} -DNAMESPACE=${project_profile}"
+      fi
+      app_options="${app_options} -DMASTER_URL=${master_url} -DLABELS=${labels}"
       if [ "${cluster}" != "" ]; then
         app_options="${app_options} -Dapp.cluster-name=${cluster}"
       fi
   fi
-
-  if [ $(is_exist "dc" "${app_name}" "${project_profile}" ) == "yes" ]; then
+  is_dc_exist=$(is_exist "dc" "${app_name}" "${project_profile}")
+  log_debug "is_dc_exist: ${is_dc_exist}"
+  if [ ${is_dc_exist} == "yes" ]; then
     # remove config triggers
     log_debug "check config trigger"
     if [ "$(oc set triggers dc/simple-order-command -a | grep "config " | awk '{print $3}')" == "true" ]; then
