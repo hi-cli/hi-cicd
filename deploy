@@ -47,6 +47,7 @@ function deploy() {
   image_tag="latest"
 
   env_profile=""
+  
   if [ -f ./package.json ]; then
     log_debug "found nodejs app"
     ver=$(get_nodejs_app_version)
@@ -69,6 +70,19 @@ function deploy() {
       gitbook build . dist
       create_package_json "dist/package.json"
     fi
+  elif [ -d ./dist ]; then
+    log_debug "found web app"
+    if [ ! -f ./dist/package.json ]; then
+      if [ "${ver}" == "" ]; then
+        ver="1.0.0"
+      fi
+    elif [ -f ./package.json ]; then
+      ver=$(get_nodejs_app_version)
+    fi
+    create_package_json "dist/package.json"
+    from_dir="dist"
+    image_stream="${is_s2i_nodejs}"
+
   elif [ -f pom.xml ]; then
     log_debug "found java app"
     app_options="-Xmx256m -Xss256k -Djava.net.preferIPv4Stack=true"
@@ -152,7 +166,7 @@ function deploy() {
       rm -rf oc-build && mkdir -p oc-build
       cp target/${app}-${ver}.jar oc-build/app.jar
     elif [ -f dist/package.json ]; then
-      log_debug "found nodejs app"
+      log_debug "deploy web app"
     else
       log_error "No app target found!"
       exit
@@ -166,7 +180,7 @@ function deploy() {
       oc new-build --name=${app_name} --image-stream=${image_stream} --binary=true --labels=app=${app_name} -n ${project_profile} || true
     fi
     # build image
-    log_debug "start build"
+    log_debug "start build, from_dir: ${from_dir}"
     oc start-build ${app_name} --from-dir="${from_dir}" --wait=true -n ${project_profile}
   else
     # tag for stage or prod
