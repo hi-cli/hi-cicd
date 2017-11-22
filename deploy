@@ -139,7 +139,7 @@ function deploy() {
   if [ ${is_dc_exist} == "yes" ]; then
     # remove config triggers
     log_debug "check config trigger"
-    if [ "$(oc set triggers dc/simple-order-command -a | grep "config " | awk '{print $3}')" == "true" ]; then
+    if [ "$(oc set triggers dc/${app} -a | grep "config " | awk '{print $3}')" == "true" ]; then
       log_debug "set config trigger"
       oc set triggers dc/${app_name} --from-config --remove
     fi
@@ -226,12 +226,8 @@ function deploy() {
         ${labels_option} \
         -n ${project_profile}
     else
-      oc new-app ${app_name}:latest \
-        --env DEPLOYER="${deployer}" \
-        --env TZ="${timezone}" \
-        --env REVISION="${rev}" \
-        ${labels_option} \
-        -n ${project_profile}
+      log_debug "oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env TZ="${timezone}" --env REVISION="${rev}" ${labels_option} -n ${project_profile}"
+      oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env TZ="${timezone}" --env REVISION="${rev}" ${labels_option} -n ${project_profile}
     fi
     # if [ "${env_profile}" != "" ] && [ "${app_options}" != "" ]; then
     #   log_debug "add app options"
