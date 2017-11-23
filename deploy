@@ -85,7 +85,12 @@ function deploy() {
 
   elif [ -f pom.xml ]; then
     log_debug "found java app"
-    app_options="-Xmx256m -Xss256k -Djava.net.preferIPv4Stack=true"
+
+    if [ "${app_options}" == "" ]; then
+      app_options="-Xmx256m -Xss256k"
+    fi
+    app_options="${app_options} -Djava.net.preferIPv4Stack=true"
+
     env_profile=${profile}
 
     from_dir="oc-build"
