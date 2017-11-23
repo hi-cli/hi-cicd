@@ -109,8 +109,8 @@ function deploy() {
 
   # change app name for 
   app_name=${app}
-  if [ "${app_ver}" != "" ]; then
-    app_name="${app}-${app_ver}"
+  if [ "${postfix}" != "" ]; then
+    app_name="${app}-${postfix}"
   fi
   log_info "deploy ${project}/${app_name}, ver: ${ver}, project: ${project_profile}, timezone: ${timezone} port: ${port}"
 
