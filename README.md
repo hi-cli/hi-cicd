@@ -66,21 +66,21 @@ hi cicd deploy new
 ```
 
 * Deploy java / nodejs app to my-project-stage using my-project/my-app:dev image stream
-```
+```bash
 hi cicd deploy profile=stage
 ```
 
 * hi cicd deploy command options
-```
+```bash
 new:
     deploy as new application
 
 profile:
     dev, test, stage, prod
 
-    default value is dev
+    # default value is dev
 
-    e.g.: hi cicd deploy new profile=stage
+    # e.g.: hi cicd deploy new profile=stage
 
 image_stream:
     s2i-java, s2i-nodejs, s2i-nodejs:6.9.5
@@ -91,12 +91,13 @@ timezone:
 images_profile:
     dev, stage
 
-    default value is dev
+    # default value is dev
 
 postfix:
-    [a-z], used for blue-green deployment
+    [a-z] # used for blue-green deployment
     
-    default is null
+    # default value is null
 
-    e.g. hi cicd deploy new build postfix=blue
+    # e.g. hi cicd deploy new build postfix=blue
 ```
+
