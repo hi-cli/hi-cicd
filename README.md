@@ -92,4 +92,11 @@ images_profile:
     dev, stage
 
     default value is dev
+
+postfix:
+    [a-z], used for blue-green deployment
+    
+    default is null
+
+    e.g. hi cicd deploy new build postfix=blue
 ```
