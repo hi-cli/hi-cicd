@@ -139,6 +139,7 @@ function deploy() {
 
   deployer="$(oc whoami) ($(whoami))"
   rev="$(git show --summary --pretty='%H')"
+  log_debug "revsion: ${rev}"
   # set labels_options
   if [ "${cluster}" != "" ]; then
     cluster="${cluster}-${profile}"
