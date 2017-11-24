@@ -31,6 +31,13 @@ source "${HI_CLI_HOME}/bin/colors"
 source "${HI_CLI_HOME}/bin/logging"
 source "${HI_CLI_HOME}/bin/logging"
 source "${module_dir}/utils/common"
+
+parser="${HI_CLI_HOME}/utils/parser.py"
+
+# temporary solution
+if [ ! -f "${parser}" ]; then
+  hi update
+fi
 ###############################################################################
 function deploy() {
   # deploy(project, app, ver, "dev", "Asia/Shanghai")
@@ -86,6 +93,17 @@ function deploy() {
   elif [ -f pom.xml ]; then
     log_debug "found java app"
 
+    # parse cluster name from application.yml
+    if [ "${cluster}" == "" ]; then
+      cluster=$(python "${parser}" file "$PWD/src/main/resources/application.yml" app cluster-name)
+      cluster_active=$(python "${parser}" file "$PWD/src/main/resources/application-${profile}.yml" app cluster-name)
+      if [ "${cluster_active}" != "" ]; then
+        log_debug "parsed cluster_active: ${cluster_active}"
+        cluster="${cluster_active}"
+      fi
+      log_debug "parsed cluster: ${cluster}"
+    fi
+
     if [ "${app_options}" == "" ]; then
       app_options="-Xmx256m -Xss256k"
     fi
@@ -123,6 +141,7 @@ function deploy() {
   rev="$(git show --summary --pretty='%H')"
   # set labels_options
   if [ "${cluster}" != "" ]; then
+    cluster="${cluster}-${profile}"
     labels="cluster=${cluster}"
     labels_option="--labels=${labels}"  
   fi
@@ -139,6 +158,7 @@ function deploy() {
         app_options="${app_options} -Dapp.cluster-name=${cluster}"
       fi
   fi
+  log_debug "app_options: ${app_options}"
   is_dc_exist=$(is_exist "dc" "${app_name}" "${project_profile}")
   log_debug "is_dc_exist: ${is_dc_exist}"
   if [ ${is_dc_exist} == "yes" ]; then
