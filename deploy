@@ -142,8 +142,7 @@ function deploy() {
   log_debug "revsion: ${rev}"
   # set labels_options
   if [ "${cluster}" != "" ]; then
-    cluster="${cluster}-${profile}"
-    labels="cluster=${cluster}"
+    labels="cluster=${cluster}-${profile}"
     labels_option="--labels=${labels}"  
   fi
   labels_option="--labels=app=${app_name} ${labels_option}"
@@ -176,6 +175,10 @@ function deploy() {
       oc env dc ${app_name} APP_OPTIONS="${app_options}" DEPLOYER="${deployer}" REVISION="${rev}"
     else
       oc env dc ${app_name} DEPLOYER="${deployer}" REVISION="${rev}"
+    fi
+
+    if [ "${cluster}" != "" ]; then
+      oc label dc ${app_name} cluster=${cluster}-${profile} --overwrite
     fi
   fi
 
