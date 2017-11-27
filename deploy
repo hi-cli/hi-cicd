@@ -138,7 +138,7 @@ function deploy() {
   log_info "deploy ${project}/${app_name}, ver: ${ver}, project: ${project_profile}, timezone: ${timezone} port: ${port}"
 
   deployer="$(oc whoami) ($(whoami))"
-  rev="$(git show --summary --pretty='%H')"
+  rev="$(git show --summary --pretty='%H' | grep -v create )"
   log_debug "revsion: ${rev}"
   # set labels_options
   if [ "${cluster}" != "" ]; then
