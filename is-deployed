@@ -20,20 +20,23 @@
 #
 # Author: John Deng (john.deng@outlook.com)
 # Updated: Mon Mar 27 23:24:29 CST 2017
-# Module: cicd
+# Module: oc
 # Submodule: 
-# Command: version
+# Command: deploy
 ###############################################################################
 
 source "${HI_CLI_HOME}/bin/colors"
+#source "${HI_CLI_HOME}/bin/clap"
 source "${HI_CLI_HOME}/bin/logging"
-source "${module_dir}/utils/common"
 ###############################################################################
-function run() {
-  
-  log_info "version: 1.1.13"
-  log_info "updated time: 2017-12-01"
 
+function run() {
+  cli="oc env dc order-query --list | grep $(git show --summary --pretty='%H' | grep -v create )"
+
+  result=$?
+
+  eval $1="\${result}"
+  eval $2="\${cli}"
 }
 
 ###############################################################################

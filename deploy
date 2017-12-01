@@ -51,6 +51,10 @@ function deploy() {
   ensure_oc_login
 
   [ "${profile}" == "" ] && project_profile=${project}  || project_profile="${project}-${profile}"
+
+  # ensure project is switched
+  oc project ${project_profile}
+
   image_tag="latest"
 
   env_profile=""
@@ -164,7 +168,7 @@ function deploy() {
   if [ ${is_dc_exist} == "yes" ]; then
     # remove config triggers
     log_debug "check config trigger"
-    if [ "$(oc set triggers dc/${app} -a | grep "config " | awk '{print $3}')" == "true" ]; then
+    if [ "$(oc set triggers dc/${app_name} -a | grep "config " | awk '{print $3}')" == "true" ]; then
       log_debug "set config trigger"
       oc set triggers dc/${app_name} --from-config --remove
     fi
@@ -201,7 +205,6 @@ function deploy() {
       exit
     fi
     # check deploy target type is war or jar
-    oc project ${project_profile}
 
     # create build. override the exit code since it complains about exising imagestream
     if [ $(is_exist "bc" "${app_name}" "${project_profile}") == "no" ]; then
