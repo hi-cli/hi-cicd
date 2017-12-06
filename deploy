@@ -187,12 +187,11 @@ function deploy() {
   fi
 
   if [ "" != "${new}" ]; then
-    if [ -f target/${app}.war ]; then
+    if [ -f target/${app}-${ver}.war ]; then
       mkdir -p oc-build/deployments
       rm -rf oc-build && mkdir -p oc-build/deployments
-      ls target/${app}.war
-      log_debug "cp target/${app}.war oc-build/deployments/ROOT.war"
-      cp target/${app}.war oc-build/deployments/ROOT.war
+      log_debug "cp target/${app}-${ver}.war oc-build/deployments/ROOT.war"
+      cp target/${app}-${ver}.war oc-build/deployments/ROOT.war
       image_stream="${is_s2i_java_war}"
     elif [ -f target/${app}-${ver}.jar ]; then
       ver=$(get_java_app_version)
