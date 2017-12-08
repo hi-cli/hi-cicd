@@ -111,7 +111,8 @@ function deploy() {
     if [ "${app_options}" == "" ]; then
       app_options="-Xmx256m -Xss256k"
     fi
-    app_options="${app_options} -Djava.net.preferIPv4Stack=true"
+    # all applications will need -Djava.net.preferIPv4Stack=true -Dfile.encoding=utf-8
+    app_options="${app_options} -Djava.net.preferIPv4Stack=true -Dfile.encoding=utf-8"
 
     env_profile=${profile}
 
@@ -157,7 +158,10 @@ function deploy() {
       if [ "${namespaces_constraint}" != "" ]; then
         app_options="${app_options} -DNAMESPACE=${project_profile}"
       fi
-      app_options="${app_options} -DMASTER_URL=${master_url} -DLABELS=${labels}"
+      app_options="${app_options} -DMASTER_URL=${master_url}"
+      if [ "${labels}" != "" ]; then
+        app_options="${app_options} -DLABELS=${labels}"
+      fi
       if [ "${cluster}" != "" ]; then
         app_options="${app_options} -Dapp.cluster-name=${cluster}"
       fi
