@@ -29,7 +29,7 @@ source "${HI_CLI_HOME}/bin/clap"
 source "${HI_CLI_HOME}/bin/logging"
 ###############################################################################
 function install() {
-
+  log_debug "installing cicd ..."
   # cli="curl ${oc_url} --output ${HI_CLI_HOME}/bin/oc"
   
   # # ${cli}
