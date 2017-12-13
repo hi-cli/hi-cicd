@@ -29,15 +29,13 @@ source "${HI_CLI_HOME}/bin/clap"
 source "${HI_CLI_HOME}/bin/logging"
 ###############################################################################
 function install() {
-  log_debug "installing cicd ..."
-  # cli="curl ${oc_url} --output ${HI_CLI_HOME}/bin/oc"
-  
-  # # ${cli}
+  log_debug "installing test ..."
+  oc_url=www.baidu.com
+  cli="curl ${oc_url} --output oc.test"
 
-  # result=$?
+  ${cli}
 
-  eval  $1="\${result}"
-  eval  $2="\${cli}"
+  return $?
 }
 
 ###############################################################################
