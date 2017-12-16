@@ -5,23 +5,12 @@ hi-cicd is a hi-cli module for continuous integration and delivery based on Open
 
 * Install [hi-cli](https://github.com/hi-cli/hi-cli), please add sudo at the beginning of below installation commands if you are not root.
 ```
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/hi-cli/hi-cli/master/bin/install)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/hi-cli/hi-cli/master/bin/install/init)"
 ```
 * Install hi-cicd
 ```bash
-hi package install cicd
+hi install cicd
 ```
-
-# Download [Openshift Client Tools](https://github.com/openshift/origin/releases)
-
-Download openshift client tools according to your OS, then extract the file 'oc' ('oc.exe') to /usr/bin/
-
-* [openshift-origin-client-tools-v1.5.1-7b451fc-linux-32bit.tar.gz](https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-32bit.tar.gz)
-* [openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz](https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz)
-* [openshift-origin-client-tools-v1.5.1-7b451fc-mac.zip](https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-mac.zip)
-* [openshift-origin-client-tools-v1.5.1-7b451fc-windows.zip](https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-windows.zip)
-
-#### For Chinese users, please download it from [here](http://pan.baidu.com/s/1jHFadoy)
 
 # Usage
 
@@ -33,11 +22,6 @@ oc version
 ```
 
 If you are using zsh, you can install [oc command completion](https://github.com/chmouel/oh-my-zsh-openshift)
-
-* login openshift
-```bash
-oc login
-```
 
 * make a directory that host your app
 ```bash
@@ -100,4 +84,3 @@ postfix:
 
     # e.g. hi cicd deploy new build postfix=blue
 ```
-
