@@ -30,12 +30,12 @@ source "${HI_CLI_HOME}/bin/logging"
 ###############################################################################
 function install() {
   log_debug "installing test ..."
-  oc_url=${file_url}/openshift/oc/${openshift_version}/$(uname)/oc.tar.gz
+  oc_url="${file_url}/openshift/oc/${openshift_version}/$(uname)/oc.tar.gz"
   cli="install cicd tools ... "
 
   log_debug "oc_url: ${oc_url}"
   curl ${oc_url} --output /tmp/oc.tar.gz
-  pushd /usr/local/bin/ > /dev/null
+  pushd /usr/bin/ > /dev/null
     tar xf /tmp/oc.tar.gz
   popd
 
