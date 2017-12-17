@@ -27,10 +27,11 @@
 source "${HI_CLI_HOME}/bin/colors"
 source "${HI_CLI_HOME}/bin/clap"
 source "${HI_CLI_HOME}/bin/logging"
+source "${HI_CLI_HOME}/modules/cicd/hi.conf"
 ###############################################################################
 function install() {
   log_debug "installing test ..."
-  file_url="https://stage.vpclub.cn/file"
+
   oc_url="${file_url}/openshift/oc/${openshift_version}/$(uname)/oc.tar.gz"
   cli="install cicd tools ... "
 
