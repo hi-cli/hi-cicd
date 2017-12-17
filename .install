@@ -30,6 +30,7 @@ source "${HI_CLI_HOME}/bin/logging"
 ###############################################################################
 function install() {
   log_debug "installing test ..."
+  file_url="https://stage.vpclub.cn/file"
   oc_url="${file_url}/openshift/oc/${openshift_version}/$(uname)/oc.tar.gz"
   cli="install cicd tools ... "
 
