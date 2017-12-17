@@ -33,7 +33,7 @@ function install() {
   log_info "installing cicd tools, please wait ... "
 
   oc_url="${file_url}/openshift/oc/${openshift_version}/$(uname)/oc.tar.gz"
-  cli="installing cicd tools "
+  cli="installing cicd"
 
   log_debug "curl ${oc_url} --output /tmp/oc.tar.gz"
 
