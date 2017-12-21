@@ -74,8 +74,8 @@ function diff_git_reversion_app()
 
 function run() {
 
-  cli="check git reversion"
-  log_debug "$arg3 $arg4 $arg5"
+  cli="hi cicd diff"
+  log_info "get different git revision between ${arg3}-${arg4} and ${arg3}-${arg5}"
   l_project=${arg3}
   l_profile1=${arg4}
   l_profile2=${arg5}
@@ -83,7 +83,7 @@ function run() {
     # log_debug "${app}"
     result="$(diff_git_reversion_app ${app} ${l_project} ${l_profile1} ${l_profile2} )"
     if [ "${result}" != "" ]; then
-      log_debug "${result}"
+      log_info "${result}"
     fi
   done
 
