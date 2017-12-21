@@ -33,6 +33,15 @@ function get_current_project()
   echo $(oc project | awk '{print $3}'|awk -F'"' '{print $2}')
 }
 
+
+function get_git_deployer()
+{
+  l_app=$1
+  l_project_profile=$2
+
+  echo $(oc env dc/${l_app} -n ${l_project_profile} --list | grep DEPLOYER | sed "s/DEPLOYER=//g")
+}
+
 function get_git_reversion()
 {
   l_app=$1
@@ -61,12 +70,13 @@ function diff_git_reversion_app()
   l_profile2=$4
 
   rev1=$(get_git_reversion ${l_app} ${l_project}-${l_profile1} )
+  deployer=$(get_git_deployer ${l_app} ${l_project}-${l_profile1})
 
   if [ "$(is_app_exist ${l_app} ${l_project}-${l_profile2})" == "yes" ]; then
     rev2=$(get_git_reversion ${l_app} ${l_project}-${l_profile2} )
 
     if [ "${rev1}" !=  "${rev2}" ]; then
-      echo "${l_app} ( ${rev1} vs ${rev2} )"
+      echo "[ ${l_app} ] [ ${rev1} ] [ ${rev2} ] [ ${deployer} ]"
     fi
 
   fi
