@@ -20,23 +20,33 @@
 #
 # Author: John Deng (john.deng@outlook.com)
 # Updated: Mon Mar 27 23:24:29 CST 2017
-# Module: cicd
+# Module: oc
 # Submodule: 
-# Command: version
+# Command: deploy
+###############################################################################
+parser="${HI_CLI_HOME}/utils/parser.py"
 ###############################################################################
 
-source "${HI_CLI_HOME}/bin/colors"
-source "${HI_CLI_HOME}/bin/logging"
-source "${module_dir}/utils/common"
-###############################################################################
-cicd_version="1.1.16"
-###############################################################################
+function get_apis() {
+  
+  log_debug "get apis"
+
+  apis=$(http http://kong-admin-kong-gateway-dev.apps.vpclub.io/apis)
+
+  value=$(python "${parser}" json "${apis}" data )
+  log_debug "api: ${value}"
+  
+}
 
 function run() {
-  
-  log_info "version: ${cicd_version}"
-  log_info "updated time: 2017-12-17"
+  cli="get apis"
 
+  get_apis
+
+  result=$?
+
+  eval $1="\${result}"
+  eval $2="\${cli}"
 }
 
 ###############################################################################

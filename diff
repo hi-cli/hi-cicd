@@ -1,0 +1,98 @@
+#!/bin/bash
+###############################################################################
+# Project: hi-cli
+# Description: The cross platform development toolkit - hi-cli
+# Author: John Deng (john.deng@outlook.com)
+#
+# Copyright (c) 2014-2017 John Deng (john.deng@outlook.com)
+#
+# Licensed under the Apache License, Version 2.0 (the License);
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an AS IS BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Author: John Deng (john.deng@outlook.com)
+# Updated: Sat Mar 18 15:33:39 CST 2017
+# module: oc
+# Action: login
+###############################################################################
+
+source "${HI_CLI_HOME}/bin/colors"
+#source "${HI_CLI_HOME}/bin/clap"
+source "${HI_CLI_HOME}/bin/logging"
+###############################################################################
+function get_current_project()
+{
+  echo $(oc project | awk '{print $3}'|awk -F'"' '{print $2}')
+}
+
+function get_git_reversion()
+{
+  l_app=$1
+  l_project_profile=$2
+
+  echo $(oc env dc/${l_app} -n ${l_project_profile} --list | grep REVISION | sed "s/REVISION=//g")
+}
+
+function is_app_exist()
+{
+  l_app=$1
+  l_project_profile=$2
+  
+  if [ "$(oc get dc -n ${l_project_profile} -l app=${l_app} 2> /dev/null)" == "" ]; then
+    echo "no"
+  else
+    echo "yes"   
+  fi
+}
+
+function diff_git_reversion_app()
+{
+  l_app=$1
+  l_project=$2
+  l_profile1=$3
+  l_profile2=$4
+
+  rev1=$(get_git_reversion ${l_app} ${l_project}-${l_profile1} )
+
+  if [ "$(is_app_exist ${l_app} ${l_project}-${l_profile2})" == "yes" ]; then
+    rev2=$(get_git_reversion ${l_app} ${l_project}-${l_profile2} )
+
+    if [ "${rev1}" !=  "${rev2}" ]; then
+      echo "${l_app} ( ${rev1} vs ${rev2} )"
+    fi
+
+  fi
+}
+
+function run() {
+
+  cli="check git reversion"
+  log_debug "$arg3 $arg4 $arg5"
+  l_project=${arg3}
+  l_profile1=${arg4}
+  l_profile2=${arg5}
+  oc get dc -n ${l_project}-${l_profile1} | grep -v NAME | awk '{print $1}' | while read app; do
+    # log_debug "${app}"
+    result="$(diff_git_reversion_app ${app} ${l_project} ${l_profile1} ${l_profile2} )"
+    if [ "${result}" != "" ]; then
+      log_debug "${result}"
+    fi
+  done
+
+  result=$?
+
+  eval $1=\${result}
+  eval $2=\${cli}
+}
+
+###############################################################################
+
+
