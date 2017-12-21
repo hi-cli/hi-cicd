@@ -39,7 +39,7 @@ function get_git_deployer()
   l_app=$1
   l_project_profile=$2
 
-  echo $(oc env dc/${l_app} -n ${l_project_profile} --list | grep DEPLOYER | sed "s/DEPLOYER=//g")
+  echo $(oc env dc/${l_app} -n ${l_project_profile} --list 2> /dev/null | grep DEPLOYER | sed "s/DEPLOYER=//g")
 }
 
 function get_git_reversion()
@@ -47,7 +47,7 @@ function get_git_reversion()
   l_app=$1
   l_project_profile=$2
 
-  echo $(oc env dc/${l_app} -n ${l_project_profile} --list | grep REVISION | sed "s/REVISION=//g")
+  echo $(oc env dc/${l_app} -n ${l_project_profile} --list 2> /dev/null | grep REVISION | sed "s/REVISION=//g")
 }
 
 function is_app_exist()
@@ -76,7 +76,7 @@ function diff_git_reversion_app()
     rev2=$(get_git_reversion ${l_app} ${l_project}-${l_profile2} )
 
     if [ "${rev1}" !=  "${rev2}" ]; then
-      echo "[ ${l_app} ] [ ${rev1} ] [ ${rev2} ] [ ${deployer} ]"
+      echo "[ ${l_profile1}: ${rev1} ] [ ${l_profile2}: ${rev2} ] [ deployer: ${deployer} ]"
     fi
 
   fi
@@ -85,16 +85,18 @@ function diff_git_reversion_app()
 function run() {
 
   cli="hi cicd diff"
-  log_info "get different git revision between ${arg3}-${arg4} and ${arg3}-${arg5}"
-  l_project=${arg3}
-  l_profile1=${arg4}
-  l_profile2=${arg5}
-  oc get dc -n ${l_project}-${l_profile1} | grep -v NAME | awk '{print $1}' | while read app; do
-    # log_debug "${app}"
-    result="$(diff_git_reversion_app ${app} ${l_project} ${l_profile1} ${l_profile2} )"
-    if [ "${result}" != "" ]; then
-      log_info "${result}"
-    fi
+  log_info "get different git revision between ${arg3} and ${arg4}"
+  l_profile1=${arg3}
+  l_profile2=${arg4}
+  oc projects | grep ${l_profile2} | sed "s/\-${l_profile2}//g" | sed 's/\*/ /g' | grep -v Using | while read project; do
+    log_debug "project: ${project}"
+    oc get dc -n ${project}-${l_profile1} 2> /dev/null | grep -v NAME | awk '{print $1}' | while read app; do
+      # log_debug "${app}"
+      result="$(diff_git_reversion_app ${app} ${project} ${l_profile1} ${l_profile2} )"
+      if [ "${result}" != "" ]; then
+        log_warn "[ app: ${app} ] [ project: ${project} ] ${result}"
+      fi
+    done
   done
 
   result=$?

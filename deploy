@@ -31,6 +31,7 @@ source "${HI_CLI_HOME}/bin/colors"
 source "${HI_CLI_HOME}/bin/logging"
 source "${HI_CLI_HOME}/bin/logging"
 source "${module_dir}/utils/common"
+source "${module_dir}/version"
 
 parser="${HI_CLI_HOME}/utils/parser.py"
 
@@ -142,7 +143,8 @@ function deploy() {
   fi
   log_info "deploy ${project}/${app_name}, ver: ${ver}, project: ${project_profile}, timezone: ${timezone} port: ${port}"
 
-  deployer="$(oc whoami) ($(whoami))"
+  deployer="$(oc whoami) ($(whoami)) (cicd-${cicd_version})"
+  log_debug "deployer: ${deployer}"
   rev="$(git show --summary --pretty='%H' | grep -v create )"
   log_debug "revsion: ${rev}"
   # set labels_options
