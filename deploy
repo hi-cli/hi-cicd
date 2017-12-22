@@ -79,7 +79,7 @@ function deploy() {
     from_dir="dist"
     image_stream="${is_s2i_gitbook}"
     if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
-      gitbook build . dist
+      gitbook install && gitbook build . dist
       create_package_json "dist/package.json"
     fi
   elif [ -d ./dist ]; then
