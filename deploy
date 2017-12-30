@@ -234,7 +234,6 @@ function deploy() {
     log_debug "tag image stream"
     image_tag="${ver}"
     log_debug "image_tag: ${image_tag}, ver: ${ver}"
-    log_debug "oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:latest"
 
     if [ $(oc get is ${app} -n ${project}-dev 2>/dev/null | grep latest | wc -l) != 0 ]; then
       log_debug "found image steam ${app} from ${project}-dev"
@@ -246,10 +245,11 @@ function deploy() {
       log_error "no image stream found!"
       return -3
     fi
+    log_debug "oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:latest"
 
-    src_app_name=${app_name}
-    if [ "${src}" != "" ]; then
-      src_app_name="${src}"
+    src_app_name="${app_name}"
+    if [ "${src_app}" != "" ]; then
+      src_app_name="${src_app}"
     fi
 
     # tag new image stream
