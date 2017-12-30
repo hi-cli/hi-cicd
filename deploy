@@ -247,9 +247,14 @@ function deploy() {
       return -3
     fi
 
+    src_app_name=${app_name}
+    if [ "${src}" != "" ]; then
+      src_app_name="${src}"
+    fi
+
     # tag new image stream
-    oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:${image_tag}
-    oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:latest
+    oc tag ${project}-${images_profile}/${src_app_name}:latest ${project_profile}/${app_name}:${image_tag}
+    oc tag ${project}-${images_profile}/${src_app_name}:latest ${project_profile}/${app_name}:latest
     # switch to new
     oc project ${project_profile}
   fi
