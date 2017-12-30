@@ -98,6 +98,16 @@ function deploy() {
   elif [ -f pom.xml ]; then
     log_debug "found java app"
 
+    if [ "${new}" != "" ]; then
+      if [ "${profile}" == "prod" ]; then
+        log_warn "Please deploy to stage first!"
+        return -4
+      elif [ "${profile}" == "test" ] || [ "${profile}" == "load" ]; then
+        log_warn "Please deploy to dev first!"
+        return -4
+      fi
+    fi  
+
     # parse cluster name from application.yml
     if [ "${cluster}" == "" ]; then
       cluster=$(python "${parser}" file "$PWD/src/main/resources/application.yml" app cluster-name)
@@ -226,10 +236,10 @@ function deploy() {
     log_debug "image_tag: ${image_tag}, ver: ${ver}"
     log_debug "oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:latest"
 
-    if [ $(oc get is ${app} -n ${project}-dev | grep latest | wc -l) != 0 ]; then
+    if [ $(oc get is ${app} -n ${project}-dev 2>/dev/null | grep latest | wc -l) != 0 ]; then
       log_debug "found image steam ${app} from ${project}-dev"
       images_profile="dev"
-    elif [ $(oc get is ${app} -n ${project}-stage | grep latest | wc -l) != 0 ]; then
+    elif [ $(oc get is ${app} -n ${project}-stage 2>/dev/null | grep latest | wc -l) != 0 ]; then
       log_debug "found image steam ${app} from ${project}-stage"
       images_profile="stage"
     else

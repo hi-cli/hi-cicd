@@ -31,7 +31,9 @@ source "${HI_CLI_HOME}/modules/cicd/hi.conf"
 ###############################################################################
 function install() {
   log_info "installing cicd tools, please wait ... "
-  # download the installation script from github.com and run then run it.
+
+  # TODO: download the installation script from github.com and run then run it.
+
   oc_url="${file_url}/openshift/oc/${openshift_version}/$(uname)/oc.tar.gz"
   cli="installing cicd"
 
