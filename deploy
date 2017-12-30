@@ -248,8 +248,8 @@ function deploy() {
     log_debug "oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:latest"
 
     src_app_name="${app_name}"
-    if [ "${src_app}" != "" ]; then
-      src_app_name="${src_app}"
+    if [ "${origin}" != "" ]; then
+      src_app_name="${app}"
     fi
 
     # tag new image stream
