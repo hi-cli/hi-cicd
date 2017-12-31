@@ -31,7 +31,7 @@ source "${HI_CLI_HOME}/bin/logging"
 function run() {
   cli=" hi cicd health "
 
-  oc get routes | grep ${app} | awk '{print $2}' | xargs -I {} sh -c "echo  [ {} ]; curl {}/health; echo '' "
+  oc get routes | grep ${app} | awk '{print $2}' | xargs -I {} sh -c "echo  [ {} ]; curl {}/health; echo '\n' "
 
   result=$?
 
