@@ -39,6 +39,56 @@ parser="${HI_CLI_HOME}/utils/parser.py"
 if [ ! -f "${parser}" ]; then
   hi update
 fi
+
+###############################################################################
+function get_dc_postfixes()
+{
+  oc get dc | grep ${app} | awk '{print $1}' | sed "s/${app}-//g" | xargs -I {} sh -c """ 
+  
+  echo {}
+  
+  """
+}
+
+###############################################################################
+function deploy_with_tag()
+{
+
+  l_app_name=${app}
+  if [ "$1" != "" ]; then
+    l_app_name=${app}-$1
+  fi
+
+  # tag for stage or prod
+    log_debug "tag image stream"
+    image_tag="${ver}"
+    log_debug "image_tag: ${image_tag}, ver: ${ver}"
+
+    if [ $(oc get is ${app} -n ${project}-dev 2>/dev/null | grep latest | wc -l) != 0 ]; then
+      log_debug "found image steam ${app} from ${project}-dev"
+      images_profile="dev"
+    elif [ $(oc get is ${app} -n ${project}-stage 2>/dev/null | grep latest | wc -l) != 0 ]; then
+      log_debug "found image steam ${app} from ${project}-stage"
+      images_profile="stage"
+    else
+      log_error "no image stream found!"
+      return -3
+    fi
+    log_debug "oc tag ${project}-${images_profile}/${l_app_name}:latest ${project_profile}/${l_app_name}:latest"
+
+    src_app_name="${l_app_name}"
+    if [ "${origin}" != "" ] || [ $(oc get is -n ${project}-${images_profile} -l app=${l_app_name} | grep ${l_app_name} | wc -l) == 0 ]; then
+      src_app_name="${app}"
+    fi
+
+    # tag new image stream
+    oc tag ${project}-${images_profile}/${src_app_name}:latest ${project_profile}/${l_app_name}:${image_tag}
+    oc tag ${project}-${images_profile}/${src_app_name}:latest ${project_profile}/${l_app_name}:latest
+    # switch to new
+    oc project ${project_profile}
+}
+
+
 ###############################################################################
 function deploy() {
   # deploy(project, app, ver, "dev", "Asia/Shanghai")
@@ -230,33 +280,15 @@ function deploy() {
     log_debug "start build, from_dir: ${from_dir}"
     oc start-build ${app_name} --from-dir="${from_dir}" --wait=true -n ${project_profile}
   else
-    # tag for stage or prod
-    log_debug "tag image stream"
-    image_tag="${ver}"
-    log_debug "image_tag: ${image_tag}, ver: ${ver}"
-
-    if [ $(oc get is ${app} -n ${project}-dev 2>/dev/null | grep latest | wc -l) != 0 ]; then
-      log_debug "found image steam ${app} from ${project}-dev"
-      images_profile="dev"
-    elif [ $(oc get is ${app} -n ${project}-stage 2>/dev/null | grep latest | wc -l) != 0 ]; then
-      log_debug "found image steam ${app} from ${project}-stage"
-      images_profile="stage"
+    
+    if [ "${postfix}" != "" ]; then
+      
+      deploy_with_tag ${postfix}
+      
     else
-      log_error "no image stream found!"
-      return -3
+      deploy_with_tag  
     fi
-    log_debug "oc tag ${project}-${images_profile}/${app_name}:latest ${project_profile}/${app_name}:latest"
-
-    src_app_name="${app_name}"
-    if [ "${origin}" != "" ]; then
-      src_app_name="${app}"
-    fi
-
-    # tag new image stream
-    oc tag ${project}-${images_profile}/${src_app_name}:latest ${project_profile}/${app_name}:${image_tag}
-    oc tag ${project}-${images_profile}/${src_app_name}:latest ${project_profile}/${app_name}:latest
-    # switch to new
-    oc project ${project_profile}
+    
   fi
 
   if [ $? != 0 ]; then
@@ -325,7 +357,17 @@ _EOF_
 function run() {
   cli="hi cicd deploy"
 
-  deploy
+  if [ "${all}" != "" ]; then
+    l_app_options=${app_options}
+    oc get dc | grep ${app} | awk '{print $1}' | while read p; do
+      app_options=${l_app_options}
+      postfix=${p/${app}/}
+      postfix=${postfix/-/}
+      deploy
+    done
+  else
+    deploy
+  fi
 
   result=$?
   log_debug "result: $result"
