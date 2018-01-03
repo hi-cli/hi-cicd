@@ -170,7 +170,7 @@ function deploy() {
     fi
 
     if [ "${app_options}" == "" ]; then
-      app_options="-Xmx256m -Xss256k"
+      app_options="-Xmx512m -Xss512k"
     fi
     # all applications will need -Djava.net.preferIPv4Stack=true -Dfile.encoding=utf-8
     app_options="${app_options} -Djava.net.preferIPv4Stack=true -Dfile.encoding=utf-8"

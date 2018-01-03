@@ -29,9 +29,9 @@ source "${HI_CLI_HOME}/bin/colors"
 source "${HI_CLI_HOME}/bin/logging"
 ###############################################################################
 function run() {
-  cli=" hi cicd health "
-
-  oc get routes | grep ${app} | awk '{print $2}' | xargs -I {} sh -c "echo  [ {} ]; curl {}/health; echo '\n' "
+  cli=" hi cicd health in ${project}-${profile} "
+  
+  oc get routes -n ${project}-${profile} | grep ${app} | awk '{print $2}' | xargs -I {} sh -c "echo  [ {} ]; curl {}/health; echo '\n' "
 
   result=$?
 
