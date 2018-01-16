@@ -136,9 +136,6 @@ function deploy_with_tag()
         oc env dc "${app_name}" -n ${project_profile} ${name}="${value}"
     done
 
-    # switch to new
-    oc project ${project_profile}
-
     return $?
 }
 
