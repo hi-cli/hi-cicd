@@ -133,7 +133,7 @@ function deploy_with_tag()
     done
     log_debug "got dc ${app_name}"
     IFS="="; oc env dc ${app_name} --list -n ${project}-${images_profile} | sed "s/${images_profile}/${profile}/g" | grep -v "#" | while read name value; do
-        oc env dc "${app_name}" -n ${project_profile} ${name}="${value}"
+        oc env dc "${app_name}" -n ${project_profile} ${name}="${value}" > /dev/null
     done
 
     return $?
@@ -142,6 +142,7 @@ function deploy_with_tag()
 
 ###############################################################################
 function deploy() {
+  log_debug "deploy ${app}"
   # deploy(project, app, ver, "dev", "Asia/Shanghai")
   
   # ensure hi init 
@@ -149,13 +150,6 @@ function deploy() {
     log_warn "Please run 'hi init' first!"
     return -1
   fi
-
-  ensure_oc_login
-
-  [ "${profile}" == "" ] && project_profile=${project}  || project_profile="${project}-${profile}"
-
-  # ensure project is switched
-  oc project ${project_profile}
 
   image_tag="latest"
 
@@ -293,9 +287,9 @@ function deploy() {
     # only set env according user's need
     log_debug "set env for dc"
     if [ "${app_options}" != "" ]; then
-      oc env dc ${app_name} APP_OPTIONS="${app_options}" DEPLOYER="${deployer}" REVISION="${ver} ${rev}"
+      oc env dc ${app_name} APP_OPTIONS="${app_options}" DEPLOYER="${deployer}" REVISION="${ver} ${rev}" > /dev/null
     else
-      oc env dc ${app_name} DEPLOYER="${deployer}" REVISION="${ver} ${rev}"
+      oc env dc ${app_name} DEPLOYER="${deployer}" REVISION="${ver} ${rev}" > /dev/null
     fi
 
     if [ "${cluster}" != "" ]; then
@@ -342,10 +336,10 @@ function deploy() {
       deploy_with_tag  
     fi
   fi
-
-  if [ $? != 0 ]; then
+  result=$?
+  if [ ${result} != 0 ]; then
     log_error "failed to create image stream"
-    return $?
+    return ${result}
   fi
 
   # set Automatically start a new deployment when the image changes
@@ -382,35 +376,57 @@ _EOF_
 
 }
 
+###############################################################################
+function deploy_all() {
+  l_app_options=${app_options}
+  oc get dc | grep -P "${taget_app}" | grep -v NAME | awk '{print $1}' | while read p; do
+    app_options=${l_app_options}
+    if [ "${has_postfix}" != "" ]; then
+      postfix=${p/${app}/}
+      postfix=${postfix/-/}
+    else
+      app=${p}  
+    fi
+    deploy
+    result=$?
+    if [ ${result} != 0 ]; then
+      return ${result}
+    fi
+  done
+  return $?
+}
+
+###############################################################################
+
 function run() {
   cli="hi cicd deploy"
   has_postfix=${postfix}
   taget_app=${app}
   current_project=$(get_current_project)
   log_debug "start deploy ..."
+
+  if [ ${all} != "" ]; then
+    current_profile=$(IFS="-"; echo $(oc status | grep project | awk '{print $3}') | awk '{print $NF}')
+    project=${current_project/-${current_profile}/}
+  fi
+
+  ensure_oc_login
+
+  [ "${profile}" == "" ] && project_profile=${project}  || project_profile="${project}-${profile}"
+
+  # ensure project is switched
+  oc project ${project_profile} > /dev/null
+
   if [ "${all}" != "" ]; then
-    l_app_options=${app_options}
-    oc get dc | grep -P "${taget_app}" | grep -v NAME | awk '{print $1}' | while read p; do
-      app_options=${l_app_options}
-      if [ "${has_postfix}" != "" ]; then
-        postfix=${p/${app}/}
-        postfix=${postfix/-/}
-        log_debug "deploy ${p}-${postfix}"
-      else
-        app=${p}  
-        log_debug "deploy ${p}"
-      fi
-      deploy
-    done
+    deploy_all
   else
     deploy
   fi
-
   result=$?
 
-  oc project ${current_project}
+  oc project ${current_project} > /dev/null
 
-  log_debug "result: $result"
+  log_debug "result: ${result}"
 
   eval $1="\${result}"
   eval $2="\${cli}"

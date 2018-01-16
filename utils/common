@@ -49,13 +49,13 @@ function is_exist() {
 }
 ###############################################################################
 function is_oc_logged_in() {
-  oc whoami 2>/dev/null
+  oc whoami > /dev/null 2>&1
   [ $? == 0 ] && echo "yes" || echo "no"
 }
 
 ###############################################################################
 function ensure_oc_login() {
-  oc whoami 2>/dev/null
+  oc whoami > /dev/null 2>&1
   if [ $? != 0 ]; then
     oc login
   fi
