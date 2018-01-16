@@ -29,13 +29,13 @@ source "${HI_CLI_HOME}/bin/colors"
 source "${HI_CLI_HOME}/bin/logging"
 source "${module_dir}/utils/common"
 ###############################################################################
-cicd_version="1.1.21"
+cicd_version="1.1.22"
 ###############################################################################
 
 function run() {
   
   log_info "version: ${cicd_version}"
-  log_info "updated time: 2018-01-03"
+  log_info "updated time: 2018-01-16"
 
 }
 

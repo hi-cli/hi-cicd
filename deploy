@@ -41,6 +41,11 @@ if [ ! -f "${parser}" ]; then
 fi
 
 ###############################################################################
+function get_current_project()
+{
+  echo "$(oc status | grep project | awk '{print $3}')"
+}
+###############################################################################
 function get_dc_postfixes()
 {
   oc get dc | grep ${app} | awk '{print $1}' | sed "s/${app}-//g" | xargs -I {} sh -c """ 
@@ -48,6 +53,36 @@ function get_dc_postfixes()
   echo {}
   
   """
+}
+
+###############################################################################
+function create_new_app()
+{
+  log_debug "need deploy image?"
+  # deploy image
+  if [ $(is_exist "dc" "${app_name}" "${project_profile}" ) == "no" ]; then
+    log_debug "create new app"
+    if [ "${app_options}" != "" ]; then
+      log_debug "set app options"
+      oc new-app ${app_name}:latest \
+        --env SPRING_PROFILES_ACTIVE="${profile}" \
+        --env APP_OPTIONS="${app_options}" \
+        --env DEPLOYER="${deployer}" \
+        --env TZ="${timezone}" \
+        --env REVISION="${ver} ${rev}" \
+        ${labels_option} \
+        -n ${project_profile}
+    else
+      log_debug "oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env TZ="${timezone}" --env REVISION="${ver} ${rev}" ${labels_option} -n ${project_profile}"
+      oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env TZ="${timezone}" --env REVISION="${ver} ${rev}" ${labels_option} -n ${project_profile}
+    fi
+    # if [ "${env_profile}" != "" ] && [ "${app_options}" != "" ]; then
+    #   log_debug "add app options"
+    #   oc env dc ${app_name} SPRING_PROFILES_ACTIVE="${profile}"
+    # fi
+  fi
+
+  return $?
 }
 
 ###############################################################################
@@ -82,10 +117,29 @@ function deploy_with_tag()
     fi
 
     # tag new image stream
-    oc tag ${project}-${images_profile}/${src_app_name}:latest ${project_profile}/${l_app_name}:${image_tag}
+    if [ "${image_tag}" != "" ]; then
+      oc tag ${project}-${images_profile}/${src_app_name}:latest ${project_profile}/${l_app_name}:${image_tag}
+    fi
     oc tag ${project}-${images_profile}/${src_app_name}:latest ${project_profile}/${l_app_name}:latest
+    
+    create_new_app
+
+    is_dc_ready=1
+    while [ "${is_dc_ready}" == "1" ]; do
+      sleep 0.5
+      oc get dc ${app_name} -n ${project_profile} > /dev/null
+      is_dc_ready=$?
+      log_debug "waiting ..."
+    done
+    log_debug "got dc ${app_name}"
+    IFS="="; oc env dc ${app_name} --list -n ${project}-${images_profile} | sed "s/${images_profile}/${profile}/g" | grep -v "#" | while read name value; do
+        oc env dc "${app_name}" -n ${project_profile} ${name}="${value}"
+    done
+
     # switch to new
     oc project ${project_profile}
+
+    return $?
 }
 
 
@@ -94,7 +148,7 @@ function deploy() {
   # deploy(project, app, ver, "dev", "Asia/Shanghai")
   
   # ensure hi init 
-  if [ ! -f hi.conf ]; then
+  if [ ! -f hi.conf ] && [ "${project}" == "" ] && [ "${app}" == "" ]; then
     log_warn "Please run 'hi init' first!"
     return -1
   fi
@@ -205,7 +259,7 @@ function deploy() {
 
   deployer="$(oc whoami) ($(whoami)) (cicd-${cicd_version})"
   log_debug "deployer: ${deployer}"
-  rev="$(git show --summary --pretty='%H' | grep -v create )"
+  rev="$(git show --summary --pretty='%H' 2>/dev/null | grep -v create )"
   log_debug "revsion: ${rev}"
   # set labels_options
   if [ "${cluster}" != "" ]; then
@@ -242,9 +296,9 @@ function deploy() {
     # only set env according user's need
     log_debug "set env for dc"
     if [ "${app_options}" != "" ]; then
-      oc env dc ${app_name} APP_OPTIONS="${app_options}" DEPLOYER="${deployer}" REVISION="${rev}"
+      oc env dc ${app_name} APP_OPTIONS="${app_options}" DEPLOYER="${deployer}" REVISION="${ver} ${rev}"
     else
-      oc env dc ${app_name} DEPLOYER="${deployer}" REVISION="${rev}"
+      oc env dc ${app_name} DEPLOYER="${deployer}" REVISION="${ver} ${rev}"
     fi
 
     if [ "${cluster}" != "" ]; then
@@ -279,6 +333,8 @@ function deploy() {
     # build image
     log_debug "start build, from_dir: ${from_dir}"
     oc start-build ${app_name} --from-dir="${from_dir}" --wait=true -n ${project_profile}
+
+    create_new_app
   else
     
     if [ "${postfix}" != "" ]; then
@@ -288,7 +344,6 @@ function deploy() {
     else
       deploy_with_tag  
     fi
-    
   fi
 
   if [ $? != 0 ]; then
@@ -296,31 +351,7 @@ function deploy() {
     return $?
   fi
 
-  # deploy image
-  if [ $(is_exist "dc" "${app_name}" "${project_profile}" ) == "no" ]; then
-    log_debug "create new app"
-    if [ "${app_options}" != "" ]; then
-      log_debug "set app options"
-      oc new-app ${app_name}:latest \
-        --env SPRING_PROFILES_ACTIVE="${profile}" \
-        --env APP_OPTIONS="${app_options}" \
-        --env DEPLOYER="${deployer}" \
-        --env TZ="${timezone}" \
-        --env REVISION="${rev}" \
-        ${labels_option} \
-        -n ${project_profile}
-    else
-      log_debug "oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env TZ="${timezone}" --env REVISION="${rev}" ${labels_option} -n ${project_profile}"
-      oc new-app ${app_name}:latest --env DEPLOYER="${deployer}" --env TZ="${timezone}" --env REVISION="${rev}" ${labels_option} -n ${project_profile}
-    fi
-    # if [ "${env_profile}" != "" ] && [ "${app_options}" != "" ]; then
-    #   log_debug "add app options"
-    #   oc env dc ${app_name} SPRING_PROFILES_ACTIVE="${profile}"
-    # fi
-  fi
-
   # set Automatically start a new deployment when the image changes
-  log_debug "check image trigger"
   if [ "$(oc set triggers dc/${app_name} -a | grep image | awk '{print $5}')" == "false" ]; then
     log_debug "set image trigger"
     oc set triggers dc/${app_name} --auto=true
@@ -356,13 +387,22 @@ _EOF_
 
 function run() {
   cli="hi cicd deploy"
-
+  has_postfix=${postfix}
+  taget_app=${app}
+  current_project=$(get_current_project)
+  log_debug "start deploy ..."
   if [ "${all}" != "" ]; then
     l_app_options=${app_options}
-    oc get dc | grep ${app} | awk '{print $1}' | while read p; do
+    oc get dc | grep -P "${taget_app}" | grep -v NAME | awk '{print $1}' | while read p; do
       app_options=${l_app_options}
-      postfix=${p/${app}/}
-      postfix=${postfix/-/}
+      if [ "${has_postfix}" != "" ]; then
+        postfix=${p/${app}/}
+        postfix=${postfix/-/}
+        log_debug "deploy ${p}-${postfix}"
+      else
+        app=${p}  
+        log_debug "deploy ${p}"
+      fi
       deploy
     done
   else
@@ -370,6 +410,9 @@ function run() {
   fi
 
   result=$?
+
+  oc project ${current_project}
+
   log_debug "result: $result"
 
   eval $1="\${result}"
