@@ -123,18 +123,19 @@ function deploy_with_tag()
     oc tag ${project}-${images_profile}/${src_app_name}:latest ${project_profile}/${l_app_name}:latest
     
     create_new_app
-
-    is_dc_ready=1
-    while [ "${is_dc_ready}" == "1" ]; do
-      sleep 0.5
-      oc get dc ${app_name} -n ${project_profile} > /dev/null
-      is_dc_ready=$?
-      log_debug "waiting ..."
-    done
-    log_debug "got dc ${app_name}"
-    IFS="="; oc env dc ${app_name} --list -n ${project}-${images_profile} | sed "s/${images_profile}/${profile}/g" | grep -v "#" | while read name value; do
-        oc env dc "${app_name}" -n ${project_profile} ${name}="${value}" > /dev/null
-    done
+    if [ "${all}" != "" ]; then
+      is_dc_ready=1
+      while [ "${is_dc_ready}" == "1" ]; do
+        sleep 0.5
+        oc get dc ${app_name} -n ${project_profile} > /dev/null
+        is_dc_ready=$?
+        log_debug "waiting ..."
+      done
+      log_debug "got dc ${app_name}"
+      IFS="="; oc env dc ${app_name} --list -n ${project}-${images_profile} | sed "s/${images_profile}/${profile}/g" | grep -v "#" | while read name value; do
+          oc env dc "${app_name}" -n ${project_profile} ${name}="${value}" > /dev/null
+      done
+    fi
 
     return $?
 }
@@ -378,8 +379,12 @@ _EOF_
 
 ###############################################################################
 function deploy_all() {
+  log_debug "deploy all ${taget_app}"
   l_app_options=${app_options}
+  echo "taget_app: $(oc get dc | grep "${taget_app}" )"
+  echo """ oc get dc | grep -P "${taget_app}" | grep -v NAME | awk '{print \$1}' | while read p; do """
   oc get dc | grep -P "${taget_app}" | grep -v NAME | awk '{print $1}' | while read p; do
+    log_debug  "deploying ${p} ..."
     app_options=${l_app_options}
     if [ "${has_postfix}" != "" ]; then
       postfix=${p/${app}/}
@@ -390,10 +395,13 @@ function deploy_all() {
     deploy
     result=$?
     if [ ${result} != 0 ]; then
+      log_debug "return with ${result}" 
       return ${result}
     fi
   done
-  return $?
+  result=$?
+  log_debug "return with ${result}"
+  return ${result}
 }
 
 ###############################################################################
@@ -405,9 +413,12 @@ function run() {
   current_project=$(get_current_project)
   log_debug "start deploy ..."
 
+  echo "taget_app: $(oc get dc | grep "${taget_app}" )"
+
   if [ ${all} != "" ]; then
     current_profile=$(IFS="-"; echo $(oc status | grep project | awk '{print $3}') | awk '{print $NF}')
     project=${current_project/-${current_profile}/}
+    log_debug "project: ${project}"
   fi
 
   ensure_oc_login
