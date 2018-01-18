@@ -187,7 +187,7 @@ function deploy() {
 
     if [ "${build}" == "build" ]; then
       log_debug "build app ..."
-      mvn clean install
+      mvn clean install -U
     fi
   fi
 
