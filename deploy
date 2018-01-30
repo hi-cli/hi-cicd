@@ -116,6 +116,8 @@ function deploy() {
     from_dir="dist"
     image_stream="${is_s2i_nodejs}"
     if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
+      rm -rf dist # clean up dist 
+
       npm install
       
       [ -f gulpfile.js ] && gulp build --env=${profile} || npm run build:${profile} 
@@ -129,6 +131,7 @@ function deploy() {
     from_dir="dist"
     image_stream="${is_s2i_gitbook}"
     if [ ! -f dist/package.json ] || [ "${build}" == "build" ]; then
+      rm -rf dist # clean up dist 
       gitbook install && gitbook build . dist
       create_package_json "dist/package.json"
     fi
@@ -353,6 +356,8 @@ function create_package_json() {
 _EOF_
 
 }
+
+# postfix = version
 
 function run() {
   cli="hi cicd deploy"
