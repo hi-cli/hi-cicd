@@ -40,13 +40,13 @@ function run_plugin_hazelcast()
         hazelcast_svc_name="${app_name}-hz"
     fi
     
-    oc env dc ${app_name} HAZELCAST_KUBERNETES_SERVICE_NAME="${hazelcast_svc_name}" HAZELCAST_KUBERNETES_NAMESPACE="${project_profile}" 
+    oc env dc ${app_name} HAZELCAST_KUBERNETES_SERVICE_DNS="${hazelcast_svc_name}.${project_profile}" HAZELCAST_KUBERNETES_SERVICE_NAME="${hazelcast_svc_name}" HAZELCAST_KUBERNETES_NAMESPACE="${project_profile}" HAZELCAST_KUBERNETES_SERVICE_DNS_IP_TYPE="IPV4" -n ${project_profile} 2> /dev/null
 
-    if [ $(is_exist "svc" "${hazelcast_svc_name}" "${project_profile}") == "no" ]; then
-        log_debug "svc ${hazelcast_svc_name} does not exist"
-        oc expose dc ${app_name} --name="${hazelcast_svc_name}" --port=5701 --cluster-ip=None
-    else     
-        log_debug "svc ${hazelcast_svc_name} already exists"
+    if [ $(is_exist "svc/${hazelcast_svc_name}" ${project_profile}) == "no" ]; then
+        log_debug "expose svc ${hazelcast_svc_name}"   
+        oc expose dc ${app_name} --name="${hazelcast_svc_name}" --port=5701 --cluster-ip=None 2> /dev/null
+    else
+        log_debug "svc ${hazelcast_svc_name} is already exist!"    
     fi
 
     return 0

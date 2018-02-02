@@ -37,12 +37,13 @@ function get_nodejs_app_version() {
 }
 ###############################################################################
 function is_exist() {
-  resource=$1
-  res=$(oc get "${resource}" -n ${project_profile} -l app=${app_name} | grep -v NAME | awk '{print $1}' | wc -l)
-  if [ ${res} == 0 ]; then
-    echo "no"
-  else
+  resource="$1"
+  project_profile="$2"
+  res=$(oc get "${resource}" -n ${project_profile} 2> /dev/null)
+  if [ $? == 0 ]; then
     echo "yes"
+  else
+    echo "no"
   fi
 }
 ###############################################################################
