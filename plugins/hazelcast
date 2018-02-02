@@ -35,7 +35,10 @@ parser="${HI_CLI_HOME}/utils/parser.py"
 function run_plugin_hazelcast()
 {
     log_debug "run_plugin_hazelcast(${app_name} ${project_profile})"
-    hazelcast_svc_name="${app_name}-hz"
+
+    if [ "${hazelcast_svc_name}" == "" ]; then
+        hazelcast_svc_name="${app_name}-hz"
+    fi
     
     oc env dc ${app_name} HAZELCAST_KUBERNETES_SERVICE_NAME="${hazelcast_svc_name}" HAZELCAST_KUBERNETES_NAMESPACE="${project_profile}" 
 
