@@ -301,7 +301,7 @@ function deploy() {
     fi
     # build image
     log_debug "start build, from_dir: ${from_dir}"
-    # oc start-build ${app_name} --from-dir="${from_dir}" --wait=true -n ${project_profile}
+    oc start-build ${app_name} --from-dir="${from_dir}" --wait=true -n ${project_profile}
   else
     
     if [ "${postfix}" != "" ]; then
