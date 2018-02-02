@@ -10,7 +10,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#    http:#www.apache.org/licenses/LICENSE-2.0
+#    http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,24 +19,32 @@
 # limitations under the License.
 #
 # Author: John Deng (john.deng@outlook.com)
-# Updated: Mon Mar 27 23:24:29 CST 2017
+# Updated: Thu May 18 18:56:35 CST 2017
 # Module: cicd
-# Submodule: 
-# Command: version
+# Submodule: plugins
+# Command: hazelcast
 ###############################################################################
-
 source "${HI_CLI_HOME}/bin/colors"
 source "${HI_CLI_HOME}/bin/logging"
 source "${module_dir}/utils/common"
-###############################################################################
-cicd_version="1.1.23"
+source "${module_dir}/version"
+
+parser="${HI_CLI_HOME}/utils/parser.py"
 ###############################################################################
 
-function run() {
-  
-  log_info "version: ${cicd_version}"
-  log_info "updated time: 2018-02-02"
+function run_plugin_hazelcast()
+{
+    log_debug "run_plugin_hazelcast(${app_name} ${project_profile})"
+    hazelcast_svc_name="${app_name}-hz"
+    
+    oc env dc ${app_name} HAZELCAST_KUBERNETES_SERVICE_NAME="${hazelcast_svc_name}" HAZELCAST_KUBERNETES_NAMESPACE="${project_profile}" 
 
+    if [ $(is_exist "svc" "${hazelcast_svc_name}" "${project_profile}") == "no" ]; then
+        log_debug "svc ${hazelcast_svc_name} does not exist"
+        oc expose dc ${app_name} --name="${hazelcast_svc_name}" --port=5701 --cluster-ip=None
+    else     
+        log_debug "svc ${hazelcast_svc_name} already exists"
+    fi
+
+    return 0
 }
-
-###############################################################################

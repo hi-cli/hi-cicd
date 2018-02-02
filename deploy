@@ -29,7 +29,6 @@
 
 source "${HI_CLI_HOME}/bin/colors"
 source "${HI_CLI_HOME}/bin/logging"
-source "${HI_CLI_HOME}/bin/logging"
 source "${module_dir}/utils/common"
 source "${module_dir}/version"
 
@@ -88,6 +87,26 @@ function deploy_with_tag()
     oc project ${project_profile}
 }
 
+
+###############################################################################
+function run_plugins()
+{
+  # run plugin
+  result=0
+  for p in "${plugins[@]}"
+  do
+    log_debug "found plugin: ${p}"
+    plugin_file="${module_dir}/plugins/${p}"
+    if [ -f "${plugin_file}" ]; then
+      log_debug "run plugin: ${p}"
+      source "${plugin_file}"
+      run_plugin_${p}
+      result=$?
+    fi
+  done
+
+  return ${result}
+}
 
 ###############################################################################
 function deploy() {
@@ -333,6 +352,11 @@ function deploy() {
   if [ $(is_exist "route" "${app_name}" "${project_profile}") == "no" ]; then
     log_debug "create router"    
     oc expose svc/${app_name} --port=${port} -n ${project_profile}
+  fi
+  
+  # run plugins
+  if [ $? == 0 ]; then
+    run_plugins
   fi
 
   # done
