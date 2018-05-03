@@ -242,11 +242,12 @@ function deploy() {
       if [ "${namespaces_constraint}" != "" ]; then
         app_options="${app_options} -DNAMESPACE=${project_profile}"
       fi
-      app_options="${app_options} -DMASTER_URL=${master_url}"
+
       if [ "${labels}" != "" ]; then
         app_options="${app_options} -DLABELS=${labels}"
       fi
       if [ "${cluster}" != "" ]; then
+        app_options="${app_options} -DMASTER_URL=${master_url}"
         app_options="${app_options} -Dapp.cluster-name=${cluster}"
       fi
   fi
@@ -302,6 +303,7 @@ function deploy() {
     # build image
     log_debug "start build, from_dir: ${from_dir}"
     oc start-build ${app_name} --from-dir="${from_dir}" --wait=true -n ${project_profile}
+    log_debug "build result: $?"
   else
     
     if [ "${postfix}" != "" ]; then
@@ -373,7 +375,7 @@ function create_package_json() {
   "version": "${ver}",
   "description": "nodejs http-server",
   "scripts": {
-    "start": "http-server . -p 8080"
+    "start": "http-server . -d false -p 8080"
   },
   "author": "John Deng",
   "license": "MIT"
